@@ -43,3 +43,8 @@ CREATE TABLE IF NOT EXISTS records (
 INSERT OR IGNORE INTO squads (name) VALUES 
 ('向阳大队'), ('兴安大队'), ('全宁大队'), ('振兴大队'), 
 ('松州大队'), ('玉龙大队'), ('铁东大队'), ('松城大队');
+
+INSERT OR IGNORE INTO categories (name) VALUES 
+('市容市貌'), ('违法建设'), ('市政设施'), ('环境卫生'), 
+('三大队（施工噪音扬尘渣土）'), ('二大队'), ('园林绿化'), ('人事财务股'), ('审批中心');
+
