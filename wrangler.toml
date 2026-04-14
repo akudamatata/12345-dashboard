@@ -2,7 +2,4 @@ name = "12345-dashboard"
 compatibility_date = "2024-03-20"
 pages_build_output_dir = "client"
 
-[[d1_databases]]
-binding = "DB"
-database_name = "12345-dashboard-db"
-database_id = "ec055ee9-dbe7-4ab2-9eb9-687fdbb34298"
+
