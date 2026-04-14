@@ -12,7 +12,7 @@ app.get('/sys-status', async (c) => {
         return c.json({
             status: "online",
             totalRecords: results[0]?.total || 0,
-            dbSize: "N/A (Cloudflare D1)",
+            dbSize: "Cloudflare D1",
             uptime: "N/A",
             version: "v2.6.4-PRIME-CF",
             serverTime: new Date().toLocaleTimeString('zh-CN', { hour12: false, timeZone: 'Asia/Shanghai' })

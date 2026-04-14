@@ -239,7 +239,14 @@ async function updateSystemStatus() {
             latencyEl.style.color = latency < 50 ? '#00e676' : (latency < 150 ? '#facc15' : '#ff007a');
         }
         
-        if (document.getElementById('mon-storage')) document.getElementById('mon-storage').textContent = data.dbSize;
+        const storageEl = document.getElementById('mon-storage');
+        if (storageEl) {
+            storageEl.textContent = data.dbSize;
+            if (data.dbSize === 'Cloudflare D1') {
+                storageEl.style.color = 'var(--success-color)';
+                storageEl.style.textShadow = '0 0 8px rgba(0, 230, 118, 0.4)';
+            }
+        }
         if (document.getElementById('mon-total')) document.getElementById('mon-total').textContent = data.totalRecords.toLocaleString();
         if (document.getElementById('mon-version')) document.getElementById('mon-version').textContent = `BUILD ${data.version}`;
         if (document.getElementById('mon-time')) document.getElementById('mon-time').textContent = data.serverTime;
@@ -458,6 +465,10 @@ async function loadEntryData() {
             updateTally();
         });
     });
+
+    document.querySelectorAll('.gen-input').forEach(input => {
+        input.addEventListener('input', updateTally);
+    });
 }
 
 function updateTally() {
@@ -477,6 +488,9 @@ function updateTally() {
     const illegalInput = document.querySelector(`.gen-input[data-cid="${illegalId}"]`);
     if (urbanInput) urbanInput.value = urbanSum;
     if (illegalInput) illegalInput.value = illegalSum;
+
+    const genTotal = Array.from(document.querySelectorAll('.gen-input')).reduce((a, b) => a + (parseInt(b.value) || 0), 0);
+    if (document.getElementById('summary-total-sum')) document.getElementById('summary-total-sum').textContent = genTotal.toLocaleString();
 }
 
 async function saveRecords() {
