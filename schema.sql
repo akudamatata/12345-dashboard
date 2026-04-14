@@ -40,13 +40,14 @@ CREATE TABLE IF NOT EXISTS records (
 );
 
 -- Seed Initial Data
-INSERT OR IGNORE INTO squads (name) VALUES 
-('向阳大队'), ('兴安大队'), ('全宁大队'), ('振兴大队'), 
-('松州大队'), ('玉龙大队'), ('铁东大队'), ('松城大队');
+INSERT OR REPLACE INTO squads (id, name) VALUES 
+(1, '向阳大队'), (2, '兴安大队'), (3, '全宁大队'), (4, '振兴大队'), 
+(5, '松州大队'), (6, '玉龙大队'), (7, '铁东大队'), (8, '松城大队');
 
-INSERT OR IGNORE INTO categories (name) VALUES 
-('市容市貌'), ('违法建设'), ('市政设施'), ('环境卫生'), 
-('三大队（施工噪音扬尘渣土）'), ('二大队'), ('园林绿化'), ('人事财务股'), ('审批中心');
+INSERT OR REPLACE INTO categories (id, name) VALUES 
+(156, '市容市貌'), (157, '违法建设'), (158, '市政设施'), (159, '环境卫生'), 
+(160, '三大队（施工噪音扬尘渣土）'), (161, '二大队'), (162, '园林绿化'), (163, '人事财务股'), (164, '审批中心');
+
 
 -- Records
 INSERT OR REPLACE INTO records (id, category_id, year, month, workload) VALUES (2471, 156, 2025, 1, 14);
