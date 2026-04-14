@@ -5,4 +5,4 @@ pages_build_output_dir = "client"
 [[d1_databases]]
 binding = "DB"
 database_name = "12345-dashboard-db"
-database_id = "xxx-xxx-xxx" # Replace with your actual D1 ID in production.
+database_id = "ec055ee9-dbe7-4ab2-9eb9-687fdbb34298"
