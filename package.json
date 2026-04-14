@@ -1,0 +1,55 @@
+{
+  "name": "12345-dashboard",
+  "version": "1.0.0",
+  "description": "12345 态势感知平台",
+  "main": "electron/main.js",
+  "author": "",
+  "license": "ISC",
+  "scripts": {
+    "start": "node server/index.js",
+    "pages:dev": "wrangler pages dev client --d1 DB",
+    "electron": "electron .",
+    "build": "electron-builder --win"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "sqlite3": "^6.0.1"
+  },
+  "devDependencies": {
+    "electron": "^35.1.5",
+    "electron-builder": "^25.1.8",
+    "hono": "^4.12.12",
+    "wrangler": "^4.82.2"
+  },
+  "build": {
+    "appId": "com.local.12345dashboard",
+    "productName": "12345态势感知",
+    "npmRebuild": false,
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "dir",
+      "icon": "electron/icon.png"
+    },
+    "files": [
+      "electron/**",
+      "server/**",
+      "client/**",
+      "node_modules/**",
+      "!node_modules/.cache",
+      "!**/*.py",
+      "!*.xlsx",
+      "!*.old"
+    ],
+    "extraResources": [
+      {
+        "from": "database.sqlite",
+        "to": "../database.sqlite"
+      }
+    ],
+    "asar": true
+  }
+}
