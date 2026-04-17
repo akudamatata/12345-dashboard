@@ -74,7 +74,19 @@ export async function onRequest(context) {
         return next();
     }
 
-    // 4. 放行静态资源（字体、图片等，非 HTML 页面）
+    // 4. 处理登出逻辑：清除 cookie 并重定向到登录页
+    if (path === '/logout') {
+        const logoutUrl = new URL('/login', url.origin);
+        return new Response(null, {
+            status: 302,
+            headers: {
+                'Location': logoutUrl.toString(),
+                'Set-Cookie': 'auth_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; SameSite=Strict'
+            }
+        });
+    }
+
+    // 5. 放行静态资源（字体、图片等，非 HTML 页面）
     const ext = path.split('.').pop().toLowerCase();
     if (['css', 'js', 'png', 'jpg', 'svg', 'ico', 'woff', 'woff2', 'ttf'].includes(ext)) {
         return next();
