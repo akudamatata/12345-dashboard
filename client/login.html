@@ -496,9 +496,6 @@
                             autofocus
                             required
                         >
-                        <button type="button" class="toggle-visibility" id="toggle-pw" title="显示/隐藏密码" aria-label="切换密码可见性">
-                            👁️
-                        </button>
                     </div>
                 </div>
 
@@ -532,18 +529,10 @@
         const errorMsg = document.getElementById('error-msg');
         const errorText = document.getElementById('error-text');
         const successOverlay = document.getElementById('success-overlay');
-        const togglePw = document.getElementById('toggle-pw');
 
         // 获取 redirect 参数（登录成功后跳回原页面）
         const params = new URLSearchParams(window.location.search);
         const redirectTo = params.get('redirect') || '/';
-
-        // 密码显示切换
-        togglePw.addEventListener('click', () => {
-            const isHidden = pwField.type === 'password';
-            pwField.type = isHidden ? 'text' : 'password';
-            togglePw.textContent = isHidden ? '🙈' : '👁️';
-        });
 
         // 清除错误状态
         pwField.addEventListener('input', () => {
