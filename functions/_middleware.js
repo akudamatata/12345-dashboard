@@ -65,7 +65,13 @@ export async function onRequest(context) {
     }
 
     // 2. 放行登录页面及其静态资源
-    if (path === '/login' || path === '/login.html') {
+    if (path === '/login' || path === '/login/' || path === '/login.html') {
+        if (path === '/login' || path === '/login/') {
+            // 直接从资产中获取 login.html，避免 CF Pages 找不到 /login 触发 SPA 回退到 / 导致无限重定向
+            const newUrl = new URL(request.url);
+            newUrl.pathname = '/login.html';
+            return env.ASSETS.fetch(new Request(newUrl, request));
+        }
         return next();
     }
 
