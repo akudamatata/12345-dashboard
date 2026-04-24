@@ -50,26 +50,31 @@ body {
     position: absolute;
     border-radius: 50%;
     filter: blur(140px);
-    z-index: -1;
-    opacity: 0.35;
+    z-index: 0;
+    opacity: 0.65; /* 增加透明度让玻璃能透出底色 */
     pointer-events: none;
 }
 .light-1 {
     width: 60vw;
     height: 60vh;
-    background: radial-gradient(circle, rgba(10, 132, 255, 0.08) 0%, transparent 60%);
+    background: radial-gradient(circle, rgba(10, 132, 255, 0.2) 0%, transparent 60%);
     top: -10vh;
     left: -10vw;
 }
 .light-2 {
-    width: 50vw;
-    height: 50vh;
-    background: radial-gradient(circle, rgba(94, 92, 230, 0.06) 0%, transparent 60%);
+    width: 60vw;
+    height: 60vh;
+    background: radial-gradient(circle, rgba(94, 92, 230, 0.15) 0%, transparent 60%);
     bottom: -10vh;
     right: -10vw;
 }
 .light-3 {
-    display: none;
+    display: block;
+    width: 50vw;
+    height: 50vh;
+    background: radial-gradient(circle, rgba(255, 55, 95, 0.1) 0%, transparent 60%);
+    top: 30vh;
+    right: 15vw;
 }
 
 /* --- Core Layout --- */
@@ -86,14 +91,14 @@ body {
     display: flex;
     flex-direction: column;
     z-index: 10;
-    background-color: rgba(20, 20, 22, 0.6);
+    background-color: rgba(30, 30, 35, 0.45); /* 稍微提亮一点增加玻璃感 */
     backdrop-filter: blur(40px) saturate(150%);
     -webkit-backdrop-filter: blur(40px) saturate(150%);
     border-right: 1px solid var(--glass-border);
 }
 
 .glass-panel {
-    background: var(--panel-bg);
+    background: rgba(30, 30, 35, 0.45);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
     backdrop-filter: blur(40px) saturate(150%);
@@ -112,12 +117,12 @@ aside.glass-panel { border-radius: 0; box-shadow: none; border:none; border-righ
 }
 
 .logo-title {
-    font-size: 1.8rem;
+    font-size: 1.55rem; /* Reduced to avoid word-wrap */
+    white-space: nowrap;
     font-weight: 800;
     letter-spacing: -0.5px;
     margin-bottom: 0.2rem;
     color: #fff;
-    text-shadow: 0 0 10px rgba(255,255,255,0.3);
 }
 
 .logo-subtitle {
