@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>身份验证 — 12345 态势感知平台</title>
+    <meta name="description" content="12345 态势感知平台安全登录入口，请输入访问密码。">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Apple / Emby minimalist dark palette */
+            --bg-color: #0d0d0f;
+            --bg-blur: rgba(30, 30, 35, 0.4);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff;
+            --text-secondary: #9e9ea7;
+            --text-tertiary: #6b6b75;
+            --accent-color: #0a84ff; /* Apple dark mode blue */
+            --error-color: #ff453a;  /* Apple dark mode red */
+            --success-color: #32d74b;/* Apple dark mode green */
+            
+            --radius-card: 28px;
+            --radius-input: 14px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* ── 极简背光特效 (沉稳、微弱、高级) ── */
+        .ambient-glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(140px);
+            z-index: 0;
+            opacity: 0.35;
+            pointer-events: none;
+        }
+        .glow-1 {
+            width: 80vw;
+            height: 80vh;
+            background: radial-gradient(circle, rgba(10, 132, 255, 0.08) 0%, transparent 60%);
+            top: -20vh;
+            left: -20vw;
+        }
+        .glow-2 {
+            width: 70vw;
+            height: 70vh;
+            background: radial-gradient(circle, rgba(142, 67, 231, 0.06) 0%, transparent 60%);
+            bottom: -20vh;
+            right: -20vw;
+        }
+
+        /* ── 主应用容器 ── */
+        .login-wrap {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 440px;
+            padding: 0 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2.5rem;
+            animation: elegantFadeIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+            transform: translateY(15px);
+        }
+
+        @keyframes elegantFadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Logo 区 ── */
+        .login-header {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .login-header .logo-mark {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(145deg, #ffffff, #a1a1aa);
+            border-radius: 12px; /* iOS icon squircle feel */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header .logo-mark svg {
+            width: 24px;
+            height: 24px;
+            fill: #000;
+        }
+
+        .login-header h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+        }
+
+        .login-header p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* ── 毛玻璃卡片 ── */
+        .login-card {
+            width: 100%;
+            background: var(--bg-blur);
+            backdrop-filter: blur(40px) saturate(150%);
+            -webkit-backdrop-filter: blur(40px) saturate(150%);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-card);
+            padding: 2.5rem 2rem;
+            box-shadow:
+                0 30px 60px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08); /* 顶部高光倒角 */
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ── 表单及控件 ── */
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-label {
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            padding-left: 0.2rem;
+        }
+
+        .password-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
+            color: #fff;
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-input);
+            font-size: 1rem;
+            transition: all 0.25s ease;
+            outline: none;
+            line-height: 1.5;
+        }
+
+        /* 密码圆点居中且有质感 */
+        .password-input[type="password"] {
+            letter-spacing: 4px;
+            font-family: caption, -apple-system, sans-serif;
+            font-size: 1.2rem;
+        }
+
+        .password-input::placeholder {
+            letter-spacing: normal;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-tertiary);
+        }
+
+        .password-input:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .password-input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.04);
+        }
+
+        /* 错误提示 */
+        .error-message {
+            display: none;
+            font-size: 0.85rem;
+            color: var(--error-color);
+            margin-top: -0.5rem;
+            font-weight: 500;
+            padding-left: 0.2rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .error-message.visible {
+            display: block;
+        }
+
+        /* ── 按钮体验 ── */
+        .btn-submit {
+            width: 100%;
+            padding: 1.1rem;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: var(--radius-input);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            margin-top: 0.5rem;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            transform: scale(0.98);
+            background: #e4e4e7;
+        }
+
+        .btn-submit:active:not(:disabled) {
+            transform: scale(0.96);
+            background: #d4d4d8;
+        }
+
+        .btn-submit:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.3);
+            cursor: not-allowed;
+        }
+
+        /* 加载 Spinner (Apple Style) */
+        .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(0,0,0,0.2);
+            border-top-color: #000;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .btn-submit:disabled .spinner {
+            border: 2px solid rgba(255,255,255,0.1);
+            border-top-color: rgba(255,255,255,0.8);
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── 验证成功遮罩 (淡入淡出) ── */
+        .success-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(13, 13, 15, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: var(--radius-card);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            z-index: 20;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .success-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .success-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--success-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            opacity: 0;
+        }
+
+        .success-overlay.visible .success-icon {
+            opacity: 1;
+        }
+
+        .success-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: #000;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        @keyframes scaleIn {
+            0% { transform: scale(0.5); }
+            100% { transform: scale(1); }
+        }
+
+        /* ── 底部版权和辅助信息 ── */
+        .login-footer {
+            margin-top: auto;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            line-height: 1.6;
+        }
+
+        @media (max-height: 700px) {
+            .login-wrap { gap: 1.5rem; }
+            .login-card { padding: 2rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 极简背光特效 -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+
+    <div class="login-wrap">
+        <!-- Header -->
+        <div class="login-header">
+            <div class="logo-mark">
+                <!-- Apple-like abstract shape or lock -->
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C9.243 2 7 4.243 7 7v3H6c-1.103 0-2 .897-2 2v8c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2v-8c0-1.103-.897-2-2-2h-1V7c0-2.757-2.243-5-5-5zM9 7c0-1.654 1.346-3 3-3s3 1.346 3 3v3H9V7zm9 13H6v-8h12v8z"/>
+                </svg>
+            </div>
+            <h1>12345 态势感知</h1>
+            <p>SITUATIONAL AWARENESS</p>
+        </div>
+
+        <!-- 卡片主体 -->
+        <div class="login-card">
+            <!-- 成功遮罩 -->
+            <div class="success-overlay" id="success-overlay">
+                <div class="success-icon">
+                    <svg viewBox="0 0 24 24">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- 表单 -->
+            <form id="login-form" class="auth-form" autocomplete="off">
+                <div class="input-group">
+                    <label class="input-label" for="password-field">Password</label>
+                    <input
+                        type="password"
+                        id="password-field"
+                        class="password-input"
+                        placeholder="Required authentication"
+                        autocomplete="current-password"
+                        autofocus
+                        required
+                    >
+                    <div class="error-message" id="error-msg">Incorrect password. Please try again.</div>
+                </div>
+
+                <button type="submit" id="login-btn" class="btn-submit">
+                    <div class="spinner" id="btn-spinner"></div>
+                    <span id="btn-label">Sign In</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="login-footer">
+            Internal Secure Access Only<br>
+            BUILD v2.6.4-PRIME-CF
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('login-form');
+        const pwField = document.getElementById('password-field');
+        const loginBtn = document.getElementById('login-btn');
+        const spinner = document.getElementById('btn-spinner');
+        const btnLabel = document.getElementById('btn-label');
+        const errorMsg = document.getElementById('error-msg');
+        const successOverlay = document.getElementById('success-overlay');
+
+        // Capture redirect params
+        const params = new URLSearchParams(window.location.search);
+        const redirectTo = params.get('redirect') || '/';
+
+        // Clear error style on input
+        pwField.addEventListener('input', () => {
+            errorMsg.classList.remove('visible');
+            pwField.style.borderColor = 'var(--border-subtle)';
+        });
+
+        // Submit logic
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = pwField.value.trim();
+            if (!password) return;
+
+            // Loading state
+            loginBtn.disabled = true;
+            spinner.style.display = 'block';
+            btnLabel.textContent = 'Verifying...';
+            errorMsg.classList.remove('visible');
+            pwField.style.borderColor = 'var(--border-subtle)';
+
+            try {
+                const res = await fetch('/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    // Success state
+                    successOverlay.classList.add('visible');
+                    btnLabel.textContent = 'Authenticated';
+                    setTimeout(() => {
+                        window.location.href = redirectTo;
+                    }, 800);
+                } else {
+                    // Error state
+                    errorMsg.textContent = data.message || 'Incorrect password. Please try again.';
+                    errorMsg.classList.add('visible');
+                    pwField.style.borderColor = 'var(--error-color)';
+                    pwField.value = '';
+                    pwField.focus();
+
+                    loginBtn.disabled = false;
+                    spinner.style.display = 'none';
+                    btnLabel.textContent = 'Sign In';
+                }
+            } catch (err) {
+                // Network error
+                errorMsg.textContent = 'Network error. Please check your connection.';
+                errorMsg.classList.add('visible');
+                loginBtn.disabled = false;
+                spinner.style.display = 'none';
+                btnLabel.textContent = 'Sign In';
+            }
+        });
+
+        // Quick submit on Enter key
+        pwField.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') form.requestSubmit();
+        });
+    </script>
+</body>
+</html>
