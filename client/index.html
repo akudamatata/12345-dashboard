@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>12345 态势感知平台</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="./style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
     <!-- Ambient Lights for Glassmorphism -->
     <div class="ambient-light light-1"></div>
@@ -36,9 +39,9 @@
                 <button class="nav-btn" data-view="thermal">
                     <div class="nav-indicator"></div>热力矩阵
                 </button>
-                
+
                 <div class="nav-divider"></div>
-                
+
                 <button class="nav-btn" data-view="manage">
                     <div class="nav-indicator"></div>数据录入
                 </button>
@@ -75,12 +78,14 @@
                 </div>
             </div>
         </aside>
-        
+
         <main class="content">
             <!-- User Widget (Avatar & Logout) -->
             <div class="user-widget">
                 <div class="user-avatar">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 5px rgba(0, 243, 255, 0.5));">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="filter: drop-shadow(0 0 5px rgba(0, 243, 255, 0.5));">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                         <circle cx="12" cy="7" r="4"></circle>
                     </svg>
@@ -91,129 +96,152 @@
                         <div class="user-role">SYSTEM ADMIN</div>
                     </div>
                     <a href="/logout" class="btn-logout" style="text-decoration: none;">
-                        <span class="logout-icon" style="margin-right: 4px;">放弃权限退出</span>
+                        <span class="logout-icon" style="margin-right: 4px;">退出</span>
                     </a>
                 </div>
             </div>
 
             <!-- Dashboard View -->
             <section id="view-dashboard" class="view active fade-in">
-                <div class="dashboard-first-screen" style="min-height: calc(100vh - 4rem); display: flex; flex-direction: column; scroll-snap-align: start; margin-bottom: 6rem;">
+                <div class="dashboard-first-screen"
+                    style="min-height: calc(100vh - 4rem); display: flex; flex-direction: column; scroll-snap-align: start; margin-bottom: 6rem;">
                     <header class="page-header">
                         <div>
-                        <h1>业务统计大屏</h1>
-                        <p class="subtitle">全局业务概览与趋势分析</p>
-                    </div>
-                    <div class="controls glass-pill">
-                        <select id="dash-year-select" class="year-dd transparent-select"></select>
-                    </div>
-                </header>
-                
-                <div id="dashboard-alert-container" style="display: none; margin-bottom: 1rem; overflow: hidden; border-radius: 8px; background: rgba(255, 0, 122, 0.1); border: 1px solid rgba(255, 0, 122, 0.3); padding: 0.8rem 1.5rem; position: relative;" class="glow-pink">
-                    <div style="display: flex; align-items: center; gap: 10px; color: #ff007a; font-weight: 700;">
-                        <span class="sys-pulse" style="white-space: nowrap;">🚨 感知系统高优预警：</span>
-                        <div style="flex: 1; overflow: hidden; white-space: nowrap;">
-                            <marquee id="dashboard-alert-text" scrollamount="5" scrolldelay="50" style="vertical-align: middle;">监控正常，无异动指标触发。</marquee>
+                            <h1>业务统计大屏</h1>
+                            <p class="subtitle">全局业务概览与趋势分析</p>
                         </div>
-                    </div>
-                </div>
-                <div class="stats-row" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                    <div class="stat-card glass-panel glow-blue" style="flex: 2; min-width: 320px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: 1.2rem 2rem; position: relative;">
-                        <div style="z-index: 2;">
-                            <div style="font-size: 0.85rem; color: #8c8cab; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 6px;">
-                                <span style="background: var(--primary-color); color: #000; padding: 1px 5px; border-radius: 3px; font-weight: 800; font-size: 0.7rem;">核心指标</span> 
-                                <span class="title-year text-gradient">2026</span>年度系统累计工单
-                            </div>
-                            <div class="value counter" id="stat-main-total" style="font-size: 3.5rem; font-weight: 900; line-height: 1; text-shadow: 0 0 20px rgba(0, 243, 255, 0.3); background: linear-gradient(135deg, #ffffff, #00f3ff); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0</div>
+                        <div class="controls glass-pill">
+                            <select id="dash-year-select" class="year-dd transparent-select"></select>
                         </div>
-                        <div style="font-size: 5rem; opacity: 0.08; position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); pointer-events: none;">📈</div>
-                    </div>
-                    <div class="stat-card glass-panel glow-cyan" style="flex: 1; min-width: 140px;">
-                        <div class="stat-icon">🏙️</div>
-                        <div class="stat-content">
-                            <div class="label">市容市貌 · <span class="title-year">2026</span>年度</div>
-                            <div class="value counter text-cyan" id="stat-urban-total">0</div>
-                        </div>
-                    </div>
-                    <div class="stat-card glass-panel glow-purple" style="flex: 1; min-width: 140px;">
-                        <div class="stat-icon">🏗️</div>
-                        <div class="stat-content">
-                            <div class="label">违法建设 · <span class="title-year">2026</span>年度</div>
-                            <div class="value counter text-purple" id="stat-illegal-total">0</div>
-                        </div>
-                    </div>
-                    <div class="stat-card glass-panel glow-blue" style="flex: 1; min-width: 140px;">
-                        <div class="stat-icon">🌉</div>
-                        <div class="stat-content">
-                            <div class="label">市政设施 · <span class="title-year">2026</span>年度</div>
-                            <div class="value counter" style="color: #3b82f6; text-shadow: 0 0 10px rgba(59,130,246,0.4);" id="stat-municipal-total">0</div>
-                        </div>
-                    </div>
-                    <div class="stat-card glass-panel glow-pink" style="flex: 1; min-width: 140px;">
-                        <div class="stat-icon">🌳</div>
-                        <div class="stat-content">
-                            <div class="label">园林绿化 · <span class="title-year">2026</span>年度</div>
-                            <div class="value counter text-pink" id="stat-landscape-total">0</div>
-                        </div>
-                    </div>
-                </div>
+                    </header>
 
-                <div class="stats-row" style="display: flex; gap: 1rem; margin-bottom: 1.2rem;">
-                    <div class="stat-card glass-panel glow-green" style="flex: 1; min-width: 140px;">
-                        <div class="stat-icon">🧹</div>
-                        <div class="stat-content">
-                            <div class="label">环境卫生 · <span class="title-year">2026</span>年度</div>
-                            <div class="value counter text-green" id="stat-sanitation-total">0</div>
+                    <div id="dashboard-alert-container"
+                        style="display: none; margin-bottom: 1rem; overflow: hidden; border-radius: 8px; background: rgba(255, 0, 122, 0.1); border: 1px solid rgba(255, 0, 122, 0.3); padding: 0.8rem 1.5rem; position: relative;"
+                        class="glow-pink">
+                        <div style="display: flex; align-items: center; gap: 10px; color: #ff007a; font-weight: 700;">
+                            <span class="sys-pulse" style="white-space: nowrap;">🚨 感知系统高优预警：</span>
+                            <div style="flex: 1; overflow: hidden; white-space: nowrap;">
+                                <marquee id="dashboard-alert-text" scrollamount="5" scrolldelay="50"
+                                    style="vertical-align: middle;">监控正常，无异动指标触发。</marquee>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-card glass-panel glow-cyan" style="flex: 1; min-width: 140px;">
-                        <div class="stat-icon">🛡️</div>
-                        <div class="stat-content">
-                            <div class="label">二大队 · <span class="title-year">2026</span>年度</div>
-                            <div class="value counter text-cyan" id="stat-squad2-total">0</div>
+                    <div class="stats-row" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                        <div class="stat-card glass-panel glow-blue"
+                            style="flex: 2; min-width: 320px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: 1.2rem 2rem; position: relative;">
+                            <div style="z-index: 2;">
+                                <div
+                                    style="font-size: 0.85rem; color: #8c8cab; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 6px;">
+                                    <span
+                                        style="background: var(--primary-color); color: #000; padding: 1px 5px; border-radius: 3px; font-weight: 800; font-size: 0.7rem;">核心指标</span>
+                                    <span class="title-year text-gradient">2026</span>年度系统累计工单
+                                </div>
+                                <div class="value counter" id="stat-main-total"
+                                    style="font-size: 3.5rem; font-weight: 900; line-height: 1; text-shadow: 0 0 20px rgba(0, 243, 255, 0.3); background: linear-gradient(135deg, #ffffff, #00f3ff); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                                    0</div>
+                            </div>
+                            <div
+                                style="font-size: 5rem; opacity: 0.08; position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); pointer-events: none;">
+                                📈</div>
+                        </div>
+                        <div class="stat-card glass-panel glow-cyan" style="flex: 1; min-width: 140px;">
+                            <div class="stat-icon">🏙️</div>
+                            <div class="stat-content">
+                                <div class="label">市容市貌 · <span class="title-year">2026</span>年度</div>
+                                <div class="value counter text-cyan" id="stat-urban-total">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-panel glow-purple" style="flex: 1; min-width: 140px;">
+                            <div class="stat-icon">🏗️</div>
+                            <div class="stat-content">
+                                <div class="label">违法建设 · <span class="title-year">2026</span>年度</div>
+                                <div class="value counter text-purple" id="stat-illegal-total">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-panel glow-blue" style="flex: 1; min-width: 140px;">
+                            <div class="stat-icon">🌉</div>
+                            <div class="stat-content">
+                                <div class="label">市政设施 · <span class="title-year">2026</span>年度</div>
+                                <div class="value counter"
+                                    style="color: #3b82f6; text-shadow: 0 0 10px rgba(59,130,246,0.4);"
+                                    id="stat-municipal-total">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-panel glow-pink" style="flex: 1; min-width: 140px;">
+                            <div class="stat-icon">🌳</div>
+                            <div class="stat-content">
+                                <div class="label">园林绿化 · <span class="title-year">2026</span>年度</div>
+                                <div class="value counter text-pink" id="stat-landscape-total">0</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-card glass-panel glow-purple" style="flex: 1; min-width: 140px;">
-                        <div class="stat-icon">🛡️</div>
-                        <div class="stat-content">
-                            <div class="label">三大队 · <span class="title-year">2026</span>年度</div>
-                            <div class="value counter text-purple" id="stat-squad3-total">0</div>
+
+                    <div class="stats-row" style="display: flex; gap: 1rem; margin-bottom: 1.2rem;">
+                        <div class="stat-card glass-panel glow-green" style="flex: 1; min-width: 140px;">
+                            <div class="stat-icon">🧹</div>
+                            <div class="stat-content">
+                                <div class="label">环境卫生 · <span class="title-year">2026</span>年度</div>
+                                <div class="value counter text-green" id="stat-sanitation-total">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-panel glow-cyan" style="flex: 1; min-width: 140px;">
+                            <div class="stat-icon">🛡️</div>
+                            <div class="stat-content">
+                                <div class="label">二大队 · <span class="title-year">2026</span>年度</div>
+                                <div class="value counter text-cyan" id="stat-squad2-total">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-panel glow-purple" style="flex: 1; min-width: 140px;">
+                            <div class="stat-icon">🛡️</div>
+                            <div class="stat-content">
+                                <div class="label">三大队 · <span class="title-year">2026</span>年度</div>
+                                <div class="value counter text-purple" id="stat-squad3-total">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-panel glow-pink" style="flex: 1; min-width: 140px;">
+                            <div class="stat-icon">📋</div>
+                            <div class="stat-content">
+                                <div class="label">审批中心 · <span class="title-year">2026</span>年度</div>
+                                <div class="value counter text-pink" id="stat-approval-total">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-panel glow-blue" style="flex: 1; min-width: 140px;">
+                            <div class="stat-icon">💼</div>
+                            <div class="stat-content">
+                                <div class="label">人事财务股 · <span class="title-year">2026</span>年度</div>
+                                <div class="value counter"
+                                    style="color: #3b82f6; text-shadow: 0 0 10px rgba(59,130,246,0.4);"
+                                    id="stat-hrfin-total">0</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-card glass-panel glow-pink" style="flex: 1; min-width: 140px;">
-                        <div class="stat-icon">📋</div>
-                        <div class="stat-content">
-                            <div class="label">审批中心 · <span class="title-year">2026</span>年度</div>
-                            <div class="value counter text-pink" id="stat-approval-total">0</div>
+
+                    <div class="chart-row" style="flex: 1; margin-bottom: 2rem; min-height: 0;">
+                        <div class="card glass-panel flex-2 hover-lift"
+                            style="display: flex; flex-direction: column; min-height: 0;">
+                            <h3 class="card-title" style="flex-shrink: 0;">月度工单量波形图</h3>
+                            <div class="chart-container"
+                                style="flex: 1; height: auto; min-height: 0; position: relative;">
+                                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;"><canvas
+                                        id="dashboard-trend-chart"></canvas></div>
+                            </div>
+                        </div>
+                        <div class="card glass-panel flex-1 hover-lift"
+                            style="display: flex; flex-direction: column; min-height: 0;">
+                            <h3 class="card-title" style="flex-shrink: 0;">部门占比分布</h3>
+                            <div class="chart-container pie-container"
+                                style="flex: 1; height: auto; min-height: 0; position: relative;">
+                                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;"><canvas
+                                        id="dashboard-pie-chart"></canvas></div>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-card glass-panel glow-blue" style="flex: 1; min-width: 140px;">
-                        <div class="stat-icon">💼</div>
-                        <div class="stat-content">
-                            <div class="label">人事财务股 · <span class="title-year">2026</span>年度</div>
-                            <div class="value counter" style="color: #3b82f6; text-shadow: 0 0 10px rgba(59,130,246,0.4);" id="stat-hrfin-total">0</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="chart-row" style="flex: 1; margin-bottom: 2rem; min-height: 0;">
-                    <div class="card glass-panel flex-2 hover-lift" style="display: flex; flex-direction: column; min-height: 0;">
-                        <h3 class="card-title" style="flex-shrink: 0;">月度工单量波形图</h3>
-                        <div class="chart-container" style="flex: 1; height: auto; min-height: 0; position: relative;">
-                            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;"><canvas id="dashboard-trend-chart"></canvas></div>
-                        </div>
-                    </div>
-                    <div class="card glass-panel flex-1 hover-lift" style="display: flex; flex-direction: column; min-height: 0;">
-                        <h3 class="card-title" style="flex-shrink: 0;">部门占比分布</h3>
-                        <div class="chart-container pie-container" style="flex: 1; height: auto; min-height: 0; position: relative;">
-                            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;"><canvas id="dashboard-pie-chart"></canvas></div>
-                        </div>
-                    </div>
-                </div>
                 </div> <!-- Finish dashboard-first-screen wrapper -->
 
-                <div class="chart-row mt-6" style="scroll-snap-align: start; height: calc(100vh - 6.5rem); display: flex; flex-direction: column; min-height: 0;">
-                    <div class="card glass-panel flex-1 hover-lift" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                <div class="chart-row mt-6"
+                    style="scroll-snap-align: start; height: calc(100vh - 6.5rem); display: flex; flex-direction: column; min-height: 0;">
+                    <div class="card glass-panel flex-1 hover-lift"
+                        style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
                         <h3 class="card-title" style="flex-shrink: 0;">本年度工单量排行榜</h3>
                         <div class="table-container" style="flex: 1; overflow: hidden; min-height: 0;">
                             <table class="glass-table">
@@ -240,7 +268,7 @@
                         <p class="subtitle">多维度精准检索业务数据，无图表干扰</p>
                     </div>
                 </header>
-                
+
                 <div class="card glass-panel filter-panel">
                     <div class="advanced-filter-bar">
                         <div class="filter-group">
@@ -268,7 +296,9 @@
                     <div class="search-actions">
                         <button id="query-search-btn" class="btn btn-primary glow-btn">执行查询检索</button>
                         <button id="query-reset-btn" class="btn btn-outline">重置条件</button>
-                        <button id="query-export-btn" class="btn btn-outline" style="color:var(--success-color); border-color:var(--success-color); margin-left: auto;">⬇️ 导出为 CSV 报表</button>
+                        <button id="query-export-btn" class="btn btn-outline"
+                            style="color:var(--success-color); border-color:var(--success-color); margin-left: auto;">⬇️
+                            导出为 CSV 报表</button>
                     </div>
                 </div>
 
@@ -284,7 +314,9 @@
                                 </tr>
                             </thead>
                             <tbody id="query-results-tbody">
-                                <tr><td colspan="3" class="no-data">请选择上方筛选条件并执行查询</td></tr>
+                                <tr>
+                                    <td colspan="3" class="no-data">请选择上方筛选条件并执行查询</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -302,7 +334,7 @@
                         <p class="subtitle">专项可视化，用于部门间和多期间的数据走势对比</p>
                     </div>
                 </header>
-                
+
                 <div class="card glass-panel filter-panel">
                     <div class="advanced-filter-bar">
                         <div class="filter-group">
@@ -334,7 +366,8 @@
                 </div>
 
                 <div class="card glass-panel mt-6 hover-lift flex-expand-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <h3 class="card-title mb-0">多维可视化对比引擎</h3>
                         <div id="comp-loading" class="sys-pulse" style="display:none;">渲染中...</div>
                     </div>
@@ -357,11 +390,11 @@
                         <select id="analysis-subject-select" class="transparent-select"></select>
                     </div>
                 </header>
-                
+
                 <div class="stats-grid" id="analysis-stats-container">
                     <!-- 动态注入年度明细和合计卡片 -->
                 </div>
-                
+
                 <div class="card glass-panel hover-lift mt-6 flex-expand-card">
                     <h3 class="card-title">年度业务走势叠加对比区</h3>
                     <div class="chart-container">
@@ -381,17 +414,20 @@
                         <select id="thermal-year-select" class="year-dd transparent-select"></select>
                     </div>
                 </header>
-                
+
                 <div class="card glass-panel hover-lift flex-expand-card">
                     <div class="thermal-container custom-scrollbar" style="overflow-x: auto; flex: 1;">
                         <div id="thermal-matrix-render" style="min-width: 900px; padding: 1rem;">
                             <!-- JS will inject the heatmap grid here -->
                         </div>
                     </div>
-                    
-                    <div style="margin-top: 1.5rem; display: flex; align-items: center; justify-content: flex-end; font-size: 0.8rem; color: var(--text-secondary); gap: 10px;">
+
+                    <div
+                        style="margin-top: 1.5rem; display: flex; align-items: center; justify-content: flex-end; font-size: 0.8rem; color: var(--text-secondary); gap: 10px;">
                         <span>轻松 (业务量低)</span>
-                        <div style="width: 200px; height: 12px; background: linear-gradient(to right, rgba(0,243,255,0.1), rgba(189,0,255,0.5), rgba(255,0,122,0.9)); border-radius: 6px;"></div>
+                        <div
+                            style="width: 200px; height: 12px; background: linear-gradient(to right, rgba(0,243,255,0.1), rgba(189,0,255,0.5), rgba(255,0,122,0.9)); border-radius: 6px;">
+                        </div>
                         <span>吃紧 (业务量高)</span>
                     </div>
                 </div>
@@ -414,7 +450,7 @@
                         </div>
                     </div>
                 </header>
-                
+
                 <div class="managed-container">
                     <div class="entry-grid-wrapper">
                         <div class="card glass-panel hover-lift entry-left">
@@ -463,9 +499,10 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
-                        <button id="save-btn" class="btn btn-primary glow-btn" style="padding: 1rem 2rem; font-size: 1.1rem; border-radius: 8px;">
+                        <button id="save-btn" class="btn btn-primary glow-btn"
+                            style="padding: 1rem 2rem; font-size: 1.1rem; border-radius: 8px;">
                             <span style="margin-right: 8px;">💾</span> 同步固化并封存数据
                         </button>
                     </div>
@@ -475,4 +512,5 @@
     </div>
     <script type="module" src="./main.js"></script>
 </body>
+
 </html>

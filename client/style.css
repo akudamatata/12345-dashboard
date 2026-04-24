@@ -752,6 +752,7 @@ h3.card-title::before {
     box-shadow: 0 0 10px var(--primary-color);
 }
 
+#view-manage { padding-top: 2rem; }
 #view-manage .page-header { margin-bottom: 0.6rem; }
 #view-manage h1 { font-size: 1.5rem; }
 #view-manage .subtitle { display: none; }
