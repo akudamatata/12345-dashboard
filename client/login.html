@@ -8,22 +8,28 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #00f3ff;
-            --secondary-color: #bd00ff;
-            --accent-color: #ff007a;
-            --success-color: #00e676;
-            --bg-dark: #13131f;
-            --panel-bg: #1f1f31;
-            --glass-border: rgba(255, 255, 255, 0.06);
+            /* Apple / Emby minimalist dark palette */
+            --bg-color: #0d0d0f;
+            --bg-blur: rgba(30, 30, 35, 0.4);
+            --border-subtle: rgba(255, 255, 255, 0.08);
             --text-primary: #ffffff;
-            --text-secondary: #8c8cab;
+            --text-secondary: #9e9ea7;
+            --text-tertiary: #6b6b75;
+            --accent-color: #0a84ff; /* Apple dark mode blue */
+            --error-color: #ff453a;  /* Apple dark mode red */
+            --success-color: #32d74b;/* Apple dark mode green */
+            
+            --radius-card: 28px;
+            --radius-input: 14px;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Inter', "PingFang SC", "Microsoft YaHei", -apple-system, sans-serif;
+            font-family: 'Inter', "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         html, body {
@@ -33,7 +39,7 @@
         }
 
         body {
-            background-color: var(--bg-dark);
+            background-color: var(--bg-color);
             color: var(--text-primary);
             display: flex;
             align-items: center;
@@ -41,482 +47,356 @@
             position: relative;
         }
 
-        /* ── 霓虹氛围光 ── */
-        .ambient-light {
+        /* ── 极简背光特效 (沉稳、微弱、高级) ── */
+        .ambient-glow {
             position: absolute;
             border-radius: 50%;
-            filter: blur(120px);
+            filter: blur(140px);
             z-index: 0;
-            opacity: 0.45;
-            animation: float 20s infinite ease-in-out alternate;
+            opacity: 0.35;
             pointer-events: none;
         }
-        .light-1 {
-            width: 650px; height: 650px;
-            background: radial-gradient(circle, rgba(189,0,255,0.3) 0%, transparent 60%);
-            top: -220px; left: -180px;
+        .glow-1 {
+            width: 80vw;
+            height: 80vh;
+            background: radial-gradient(circle, rgba(10, 132, 255, 0.08) 0%, transparent 60%);
+            top: -20vh;
+            left: -20vw;
         }
-        .light-2 {
-            width: 550px; height: 550px;
-            background: radial-gradient(circle, rgba(0,243,255,0.22) 0%, transparent 60%);
-            bottom: -180px; right: -120px;
-            animation-delay: -6s;
-        }
-        .light-3 {
-            width: 400px; height: 400px;
-            background: radial-gradient(circle, rgba(255,0,122,0.18) 0%, transparent 60%);
-            top: 55%; left: 50%;
-            transform: translate(-50%, -50%);
-            animation-delay: -13s;
+        .glow-2 {
+            width: 70vw;
+            height: 70vh;
+            background: radial-gradient(circle, rgba(142, 67, 231, 0.06) 0%, transparent 60%);
+            bottom: -20vh;
+            right: -20vw;
         }
 
-        @keyframes float {
-            0%   { transform: translate(0, 0) scale(1); }
-            50%  { transform: translate(60px, 35px) scale(1.08); }
-            100% { transform: translate(-35px, -50px) scale(0.93); }
-        }
-
-        /* ── 扫描线动态背景 ── */
-        body::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 2px,
-                rgba(0, 243, 255, 0.012) 2px,
-                rgba(0, 243, 255, 0.012) 4px
-            );
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* ── 登录卡片容器 ── */
+        /* ── 主应用容器 ── */
         .login-wrap {
             position: relative;
             z-index: 10;
             width: 100%;
-            max-width: 460px;
-            padding: 0 1.5rem;
+            max-width: 440px;
+            padding: 0 2rem;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 2rem;
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            gap: 2.5rem;
+            animation: elegantFadeIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+            transform: translateY(15px);
         }
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to   { opacity: 1; transform: translateY(0); }
+        @keyframes elegantFadeIn {
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* ── Logo 区 ── */
-        .login-logo {
+        .login-header {
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
         }
 
-        .login-logo .logo-icon {
-            font-size: 3rem;
-            display: block;
-            margin-bottom: 0.8rem;
-            text-shadow: 0 0 30px rgba(0, 243, 255, 0.5);
-            animation: pulse-icon 3s ease-in-out infinite;
+        .login-header .logo-mark {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(145deg, #ffffff, #a1a1aa);
+            border-radius: 12px; /* iOS icon squircle feel */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            margin-bottom: 0.5rem;
         }
 
-        @keyframes pulse-icon {
-            0%, 100% { filter: drop-shadow(0 0 8px rgba(0,243,255,0.6)); }
-            50%       { filter: drop-shadow(0 0 20px rgba(189,0,255,0.8)); }
+        .login-header .logo-mark svg {
+            width: 24px;
+            height: 24px;
+            fill: #000;
         }
 
-        .login-logo .logo-title {
-            font-size: 1.9rem;
-            font-weight: 800;
+        .login-header h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
             letter-spacing: -0.5px;
-            color: #fff;
-            text-shadow: 0 0 10px rgba(255,255,255,0.2);
+            color: #ffffff;
         }
 
-        .text-gradient {
-            background: linear-gradient(135deg, #00f3ff, #bd00ff, #ff007a);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-size: 200% auto;
-            animation: shine 4s linear infinite;
-            font-weight: 800;
-        }
-
-        @keyframes shine { to { background-position: 200% center; } }
-
-        .login-logo .logo-sub {
-            font-size: 0.75rem;
+        .login-header p {
+            font-size: 0.85rem;
             color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 2.5px;
-            margin-top: 0.3rem;
+            font-weight: 400;
         }
 
-        /* ── 玻璃卡片 ── */
+        /* ── 毛玻璃卡片 ── */
         .login-card {
             width: 100%;
-            background: rgba(31, 31, 49, 0.75);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            border-radius: 20px;
-            padding: 2.5rem;
+            background: var(--bg-blur);
+            backdrop-filter: blur(40px) saturate(150%);
+            -webkit-backdrop-filter: blur(40px) saturate(150%);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-card);
+            padding: 2.5rem 2rem;
             box-shadow:
-                0 32px 80px rgba(0, 0, 0, 0.5),
-                0 0 0 1px rgba(0, 243, 255, 0.04),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+                0 30px 60px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08); /* 顶部高光倒角 */
             position: relative;
             overflow: hidden;
         }
 
-        /* 卡片顶部光晕边 */
-        .login-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 10%;
-            right: 10%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.5), rgba(189,0,255,0.5), transparent);
-        }
-
-        /* ── 状态提示行 ── */
-        .auth-badge {
+        /* ── 表单及控件 ── */
+        .auth-form {
             display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 2rem;
-            padding: 0.6rem 1rem;
-            background: rgba(0, 243, 255, 0.06);
-            border: 1px solid rgba(0, 243, 255, 0.15);
-            border-radius: 50px;
-            font-size: 0.78rem;
-            color: var(--primary-color);
-            font-weight: 600;
-            letter-spacing: 0.3px;
+            flex-direction: column;
+            gap: 1.5rem;
         }
 
-        .auth-badge .dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            box-shadow: 0 0 8px var(--primary-color);
-            animation: blink 1.5s ease-in-out infinite;
-            flex-shrink: 0;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50%       { opacity: 0.3; }
-        }
-
-        /* ── 表单 ── */
-        .form-group {
+        .input-group {
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
-            margin-bottom: 1.5rem;
         }
 
-        .form-label {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .input-wrap {
-            position: relative;
-        }
-
-        .input-wrap .input-icon {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1rem;
-            color: var(--text-secondary);
-            pointer-events: none;
-            transition: color 0.2s;
+        .input-label {
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            padding-left: 0.2rem;
         }
 
         .password-input {
             width: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
             color: #fff;
-            padding: 0.95rem 3rem 0.95rem 2.8rem;
-            border-radius: 10px;
-            font-family: 'Inter', monospace;
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-input);
             font-size: 1rem;
-            letter-spacing: 2px;
-            transition: all 0.25s;
+            transition: all 0.25s ease;
             outline: none;
+            line-height: 1.5;
+        }
+
+        /* 密码圆点居中且有质感 */
+        .password-input[type="password"] {
+            letter-spacing: 4px;
+            font-family: caption, -apple-system, sans-serif;
+            font-size: 1.2rem;
         }
 
         .password-input::placeholder {
-            letter-spacing: 0;
-            color: rgba(140, 140, 171, 0.5);
+            letter-spacing: normal;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-tertiary);
+        }
+
+        .password-input:hover {
+            background: rgba(255, 255, 255, 0.06);
         }
 
         .password-input:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(0, 243, 255, 0.12), 0 0 20px rgba(0, 243, 255, 0.15);
-            background: rgba(0, 243, 255, 0.04);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.04);
         }
 
-        .password-input:focus + .input-icon,
-        .input-wrap:focus-within .input-icon {
-            color: var(--primary-color);
+        /* 错误提示 */
+        .error-message {
+            display: none;
+            font-size: 0.85rem;
+            color: var(--error-color);
+            margin-top: -0.5rem;
+            font-weight: 500;
+            padding-left: 0.2rem;
+            animation: fadeIn 0.3s ease;
         }
 
-        .toggle-visibility {
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            color: var(--text-secondary);
-            padding: 0.25rem;
-            transition: color 0.2s;
-            line-height: 1;
+        .error-message.visible {
+            display: block;
         }
 
-        .toggle-visibility:hover { color: #fff; }
-
-        /* ── 登录按钮 ── */
-        #login-btn {
+        /* ── 按钮体验 ── */
+        .btn-submit {
             width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, var(--primary-color), #00aacc);
+            padding: 1.1rem;
+            background: #ffffff;
+            color: #000000;
             border: none;
-            border-radius: 10px;
-            color: #000;
+            border-radius: var(--radius-input);
             font-size: 1rem;
-            font-weight: 800;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
+            font-weight: 600;
             cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.35), 0 4px 15px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            margin-top: 0.5rem;
         }
 
-        #login-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 0 35px rgba(0, 243, 255, 0.55), 0 8px 25px rgba(0,0,0,0.4);
+        .btn-submit:hover:not(:disabled) {
+            transform: scale(0.98);
+            background: #e4e4e7;
         }
 
-        #login-btn:active:not(:disabled) {
-            transform: translateY(0);
+        .btn-submit:active:not(:disabled) {
+            transform: scale(0.96);
+            background: #d4d4d8;
         }
 
-        #login-btn:disabled {
-            opacity: 0.6;
+        .btn-submit:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.3);
             cursor: not-allowed;
         }
 
-        /* 按钮光泽扫过效果 */
-        #login-btn::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 60%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transition: 0.5s;
-        }
-
-        #login-btn:hover:not(:disabled)::after {
-            left: 150%;
-        }
-
-        /* ── 错误提示 ── */
-        .error-msg {
-            display: none;
-            align-items: center;
-            gap: 8px;
-            margin-top: 1rem;
-            padding: 0.8rem 1rem;
-            background: rgba(255, 0, 122, 0.08);
-            border: 1px solid rgba(255, 0, 122, 0.25);
-            border-radius: 8px;
-            font-size: 0.85rem;
-            color: var(--accent-color);
-            font-weight: 600;
-            animation: shakeIn 0.4s ease;
-        }
-
-        .error-msg.visible {
-            display: flex;
-        }
-
-        @keyframes shakeIn {
-            0%  { transform: translateX(-8px); opacity: 0; }
-            30% { transform: translateX(6px); }
-            60% { transform: translateX(-4px); }
-            80% { transform: translateX(3px); }
-            100%{ transform: translateX(0); opacity: 1; }
-        }
-
-        /* ── 加载动画 ── */
+        /* 加载 Spinner (Apple Style) */
         .spinner {
             display: none;
             width: 18px;
             height: 18px;
-            border: 2px solid rgba(0,0,0,0.3);
+            border: 2px solid rgba(0,0,0,0.2);
             border-top-color: #000;
             border-radius: 50%;
-            animation: spin 0.7s linear infinite;
+            animation: spin 0.8s linear infinite;
+        }
+        .btn-submit:disabled .spinner {
+            border: 2px solid rgba(255,255,255,0.1);
+            border-top-color: rgba(255,255,255,0.8);
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .btn-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        /* ── 底部提示 ── */
-        .login-footer {
-            font-size: 0.72rem;
-            color: rgba(140, 140, 171, 0.5);
-            text-align: center;
-            line-height: 1.7;
-        }
-
-        /* ── 输入框抖动 (密码错误时) ── */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%       { transform: translateX(-10px); }
-            40%       { transform: translateX(10px); }
-            60%       { transform: translateX(-6px); }
-            80%       { transform: translateX(6px); }
-        }
-
-        .shake { animation: shake 0.4s ease; }
-
-        /* ── 成功状态 ── */
+        /* ── 验证成功遮罩 (淡入淡出) ── */
         .success-overlay {
-            display: none;
             position: absolute;
             inset: 0;
-            background: rgba(0, 230, 118, 0.06);
-            border-radius: 20px;
+            background: rgba(13, 13, 15, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: var(--radius-card);
+            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
             gap: 1rem;
             z-index: 20;
-            backdrop-filter: blur(4px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
         }
 
         .success-overlay.visible {
-            display: flex;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to   { opacity: 1; }
+            opacity: 1;
+            visibility: visible;
         }
 
         .success-icon {
-            font-size: 3rem;
-            filter: drop-shadow(0 0 20px var(--success-color));
-            animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            width: 50px;
+            height: 50px;
+            background: var(--success-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            opacity: 0;
         }
 
-        @keyframes popIn {
-            from { transform: scale(0); }
-            to   { transform: scale(1); }
+        .success-overlay.visible .success-icon {
+            opacity: 1;
         }
 
-        .success-text {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--success-color);
-            letter-spacing: 1px;
+        .success-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: #000;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        @keyframes scaleIn {
+            0% { transform: scale(0.5); }
+            100% { transform: scale(1); }
+        }
+
+        /* ── 底部版权和辅助信息 ── */
+        .login-footer {
+            margin-top: auto;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            line-height: 1.6;
+        }
+
+        @media (max-height: 700px) {
+            .login-wrap { gap: 1.5rem; }
+            .login-card { padding: 2rem 1.5rem; }
         }
     </style>
 </head>
 <body>
-    <!-- 氛围光 -->
-    <div class="ambient-light light-1"></div>
-    <div class="ambient-light light-2"></div>
-    <div class="ambient-light light-3"></div>
+    <!-- 极简背光特效 -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
 
     <div class="login-wrap">
-        <!-- Logo -->
-        <div class="login-logo">
-            <span class="logo-icon">🛡️</span>
-            <div class="logo-title">12345 <span class="text-gradient">态势感知</span></div>
-            <div class="logo-sub">SITUATIONAL AWARENESS PLATFORM</div>
+        <!-- Header -->
+        <div class="login-header">
+            <div class="logo-mark">
+                <!-- Apple-like abstract shape or lock -->
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C9.243 2 7 4.243 7 7v3H6c-1.103 0-2 .897-2 2v8c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2v-8c0-1.103-.897-2-2-2h-1V7c0-2.757-2.243-5-5-5zM9 7c0-1.654 1.346-3 3-3s3 1.346 3 3v3H9V7zm9 13H6v-8h12v8z"/>
+                </svg>
+            </div>
+            <h1>12345 Dash</h1>
+            <p>Situational Awareness Platform</p>
         </div>
 
-        <!-- 登录卡片 -->
+        <!-- 卡片主体 -->
         <div class="login-card">
-            <!-- 验证成功遮罩 -->
+            <!-- 成功遮罩 -->
             <div class="success-overlay" id="success-overlay">
-                <div class="success-icon">✅</div>
-                <div class="success-text">身份验证通过，正在跳转...</div>
-            </div>
-
-            <!-- 状态徽标 -->
-            <div class="auth-badge">
-                <span class="dot"></span>
-                <span>受保护区域 · 需要身份验证才可继续</span>
+                <div class="success-icon">
+                    <svg viewBox="0 0 24 24">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
             </div>
 
             <!-- 表单 -->
-            <form id="login-form" autocomplete="off">
-                <div class="form-group">
-                    <label class="form-label" for="password-field">访问密码</label>
-                    <div class="input-wrap">
-                        <input
-                            type="password"
-                            id="password-field"
-                            class="password-input"
-                            placeholder="请输入访问密码"
-                            autocomplete="current-password"
-                            autofocus
-                            required
-                        >
-                    </div>
+            <form id="login-form" class="auth-form" autocomplete="off">
+                <div class="input-group">
+                    <label class="input-label" for="password-field">Password</label>
+                    <input
+                        type="password"
+                        id="password-field"
+                        class="password-input"
+                        placeholder="Required authentication"
+                        autocomplete="current-password"
+                        autofocus
+                        required
+                    >
+                    <div class="error-message" id="error-msg">Incorrect password. Please try again.</div>
                 </div>
 
-                <button type="submit" id="login-btn">
-                    <div class="btn-content">
-                        <div class="spinner" id="btn-spinner"></div>
-                        <span id="btn-label">进入指挥系统</span>
-                    </div>
+                <button type="submit" id="login-btn" class="btn-submit">
+                    <div class="spinner" id="btn-spinner"></div>
+                    <span id="btn-label">Sign In</span>
                 </button>
-
-                <div class="error-msg" id="error-msg" role="alert">
-                    <span>🚫</span>
-                    <span id="error-text">密码错误，拒绝访问。</span>
-                </div>
             </form>
         </div>
 
-        <!-- 底部说明 -->
+        <!-- Footer -->
         <div class="login-footer">
-            此系统为内部专用平台 · 未经授权的访问企图将被记录<br>
-            BUILD v2.6.4-PRIME-CF · Powered by Cloudflare Pages
+            Internal Secure Access Only<br>
+            BUILD v2.6.4-PRIME-CF
         </div>
     </div>
 
@@ -527,29 +407,30 @@
         const spinner = document.getElementById('btn-spinner');
         const btnLabel = document.getElementById('btn-label');
         const errorMsg = document.getElementById('error-msg');
-        const errorText = document.getElementById('error-text');
         const successOverlay = document.getElementById('success-overlay');
 
-        // 获取 redirect 参数（登录成功后跳回原页面）
+        // Capture redirect params
         const params = new URLSearchParams(window.location.search);
         const redirectTo = params.get('redirect') || '/';
 
-        // 清除错误状态
+        // Clear error style on input
         pwField.addEventListener('input', () => {
             errorMsg.classList.remove('visible');
+            pwField.style.borderColor = 'var(--border-subtle)';
         });
 
-        // 表单提交
+        // Submit logic
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const password = pwField.value.trim();
             if (!password) return;
 
-            // 设置加载状态
+            // Loading state
             loginBtn.disabled = true;
             spinner.style.display = 'block';
-            btnLabel.textContent = '验证中...';
+            btnLabel.textContent = 'Verifying...';
             errorMsg.classList.remove('visible');
+            pwField.style.borderColor = 'var(--border-subtle)';
 
             try {
                 const res = await fetch('/auth', {
@@ -561,35 +442,35 @@
                 const data = await res.json();
 
                 if (res.ok && data.success) {
-                    // 验证成功
+                    // Success state
                     successOverlay.classList.add('visible');
-                    btnLabel.textContent = '验证通过';
+                    btnLabel.textContent = 'Authenticated';
                     setTimeout(() => {
                         window.location.href = redirectTo;
-                    }, 900);
+                    }, 800);
                 } else {
-                    // 密码错误
-                    errorText.textContent = data.message || '密码错误，拒绝访问。';
+                    // Error state
+                    errorMsg.textContent = data.message || 'Incorrect password. Please try again.';
                     errorMsg.classList.add('visible');
-                    pwField.classList.add('shake');
+                    pwField.style.borderColor = 'var(--error-color)';
                     pwField.value = '';
                     pwField.focus();
-                    setTimeout(() => pwField.classList.remove('shake'), 400);
 
                     loginBtn.disabled = false;
                     spinner.style.display = 'none';
-                    btnLabel.textContent = '进入指挥系统';
+                    btnLabel.textContent = 'Sign In';
                 }
             } catch (err) {
-                errorText.textContent = '网络异常，请检查连接后重试。';
+                // Network error
+                errorMsg.textContent = 'Network error. Please check your connection.';
                 errorMsg.classList.add('visible');
                 loginBtn.disabled = false;
                 spinner.style.display = 'none';
-                btnLabel.textContent = '进入指挥系统';
+                btnLabel.textContent = 'Sign In';
             }
         });
 
-        // Enter 键快捷提交
+        // Quick submit on Enter key
         pwField.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') form.requestSubmit();
         });
