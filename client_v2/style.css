@@ -132,10 +132,17 @@ aside.glass-panel { border-radius: 0; box-shadow: none; border:none; border-righ
     letter-spacing: 2px;
 }
 
+/* 强制修复汇总数值可见性 */
+.glass-table tfoot td.text-gradient,
 .text-gradient {
-    color: #64d2ff;
-    text-shadow: 0 0 10px rgba(100, 210, 255, 0.4);
-    font-weight: 700;
+    color: #64d2ff !important;
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    -webkit-text-fill-color: initial !important;
+    text-shadow: 0 0 10px rgba(100, 210, 255, 0.6) !important;
+    font-weight: 800 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 .nav-menu {
