@@ -133,10 +133,8 @@ aside.glass-panel { border-radius: 0; box-shadow: none; border:none; border-righ
 }
 
 .text-gradient {
-    background: linear-gradient(135deg, #64d2ff, #0a84ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: #0a84ff; /* Fallback for browsers not supporting text-clipping */
+    color: #64d2ff;
+    text-shadow: 0 0 10px rgba(100, 210, 255, 0.4);
     font-weight: 700;
 }
 
