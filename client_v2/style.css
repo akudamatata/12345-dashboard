@@ -138,7 +138,8 @@ aside.glass-panel { border-radius: 0; box-shadow: none; border:none; border-righ
     color: #64d2ff !important;
     background: none !important;
     -webkit-background-clip: initial !important;
-    -webkit-text-fill-color: initial !important;
+    -webkit-text-fill-color: #64d2ff !important;
+    background-image: none !important;
     text-shadow: 0 0 10px rgba(100, 210, 255, 0.6) !important;
     font-weight: 800 !important;
     opacity: 1 !important;
