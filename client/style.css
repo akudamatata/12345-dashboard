@@ -145,6 +145,19 @@ aside.glass-panel { border-radius: 0; box-shadow: none; border:none; border-righ
 
 @keyframes shine { to { background-position: 200% center; } }
 
+/* 修复：tfoot 汇总行内的数字，background-clip:text 会因父行背景不在自身上而透明
+   改用纯色 + 发光效果替代渐变文字，确保始终可见 */
+.glass-table tfoot td.text-gradient {
+    background: none !important;
+    background-image: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    -webkit-text-fill-color: #64d2ff !important;
+    color: #64d2ff !important;
+    text-shadow: 0 0 12px rgba(100, 210, 255, 0.7) !important;
+    animation: none !important;
+}
+
 .nav-menu {
     display: flex;
     flex-direction: column;
