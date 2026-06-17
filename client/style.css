@@ -146,9 +146,9 @@ aside.glass-panel { border-radius: 0; box-shadow: none; border:none; border-righ
 @keyframes shine { to { background-position: 200% center; } }
 
 /* 修复：tfoot 汇总行内的数字，background-clip:text 会因父行背景不在自身上而透明
-   改用纯色 + 发光效果替代渐变文字，确保始终可见 */
+   保留 glass-highlight 的紫色背景色，只去掉渐变图片，避免紫色条断开 */
 .glass-table tfoot td.text-gradient {
-    background: none !important;
+    background-color: rgba(189, 0, 255, 0.08) !important;
     background-image: none !important;
     -webkit-background-clip: initial !important;
     background-clip: initial !important;
