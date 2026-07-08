@@ -238,7 +238,12 @@ app.get('/subject-stats', async (c) => {
         query += " ORDER BY year DESC, month DESC";
         
         const prepared = c.env.DB.prepare(query);
-        const statement = params.length > 1 ? prepared.bind(params[0], params[1]) : prepared.bind(params[0]);
+        let statement = prepared;
+        if (params.length === 2) {
+            statement = prepared.bind(params[0], params[1]);
+        } else if (params.length === 1) {
+            statement = prepared.bind(params[0]);
+        }
         const { results } = await statement.all();
         return c.json(results);
     } catch (error) {

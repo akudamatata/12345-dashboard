@@ -625,7 +625,6 @@ async function executeQueryAction() {
     }
 
     tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;"><div class="sys-pulse" style="display:inline-block; padding:2rem 0;">检索核心数据库中...</div></td></tr>';
-    summary.style.display = 'none';
 
     try {
         const query = new URLSearchParams({ years: years.join(','), months: months.join(','), squadIds: squads.join(','), categoryIds: categories.join(',') });
@@ -644,7 +643,6 @@ async function executeQueryAction() {
         if (data.length === 0) {
             thead.innerHTML = `<tr><th>统计对象</th><th>时间节点</th><th>业务量 (件)</th></tr>`;
             tbody.innerHTML = '<tr><td colspan="100" class="no-data" style="padding:2rem;">数据库中无命中记录，请放宽搜索维度</td></tr>';
-            summary.style.display = 'none';
             tfoot.innerHTML = '';
             tfoot.style.display = 'none';
         } else {
