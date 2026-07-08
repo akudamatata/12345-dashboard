@@ -629,11 +629,20 @@ async function executeQueryAction() {
         const data = await res.json();
 
         const thead = document.querySelector('#view-query .glass-table thead');
+        let tfoot = document.getElementById('query-results-tfoot');
+        if (!tfoot) {
+            tfoot = document.createElement('tfoot');
+            tfoot.id = 'query-results-tfoot';
+            const table = document.querySelector('#view-query .glass-table');
+            if (table) table.appendChild(tfoot);
+        }
 
         if (data.length === 0) {
             thead.innerHTML = `<tr><th>统计对象</th><th>时间节点</th><th>业务量 (件)</th></tr>`;
             tbody.innerHTML = '<tr><td colspan="100" class="no-data" style="padding:2rem;">数据库中无命中记录，请放宽搜索维度</td></tr>';
             summary.style.display = 'none';
+            tfoot.innerHTML = '';
+            tfoot.style.display = 'none';
         } else {
             // Group logic for pivot table
             const timeNodes = Array.from(new Set(data.map(d => `${d.year}年度 / ${d.month}月`)));
@@ -696,12 +705,42 @@ async function executeQueryAction() {
                 </tr>
                 `;
             }).join('');
+
+            // Calculate column totals
+            const columnTotals = {};
+            timeNodes.forEach(tn => {
+                columnTotals[tn] = 0;
+            });
+            subjectEntries.forEach(([subject, info, total]) => {
+                timeNodes.forEach(tn => {
+                    columnTotals[tn] += (info.workloads[tn] || 0);
+                });
+            });
+
+            const footerCols = timeNodes.map(tn => {
+                const colSum = columnTotals[tn] || 0;
+                return `<td><b class="text-mint number-font" style="font-size:1.1rem;">${colSum.toLocaleString()}</b></td>`;
+            }).join('');
+
+            tfoot.innerHTML = `
+                <tr class="total-row glass-highlight">
+                    <td><span class="fw-bold">汇总合计</span></td>
+                    ${footerCols}
+                    <td><b class="text-gradient number-font" style="font-size:1.1rem;">${totalRecords.toLocaleString()}</b></td>
+                </tr>
+            `;
+            tfoot.style.display = '';
             
             animateValue("query-total-sum", 0, totalRecords, 500);
             summary.style.display = 'block';
         }
     } catch (e) {
         tbody.innerHTML = `<tr><td colspan="100" class="text-red">系统错误: ${e.message}</td></tr>`;
+        const tfoot = document.getElementById('query-results-tfoot');
+        if (tfoot) {
+            tfoot.innerHTML = '';
+            tfoot.style.display = 'none';
+        }
     } finally {
         btn.disabled = false;
     }
