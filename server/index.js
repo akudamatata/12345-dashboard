@@ -219,7 +219,7 @@ app.get('/api/trend/:year', (req, res) => {
 app.get('/api/subject-stats', (req, res) => {
     const { type, id, year } = req.query;
     let query = "";
-    const params = [id];
+    let params = [id];
 
     if (type === 'squad') {
         query = `
@@ -227,6 +227,15 @@ app.get('/api/subject-stats', (req, res) => {
             FROM squad_records
             WHERE squad_id = ?
         `;
+    } else if (type === 'global') {
+        query = `
+            SELECT year, month, '工单量' as category, SUM(workload) as workload FROM (
+                SELECT year, month, workload FROM records WHERE category_id NOT IN (SELECT id FROM categories WHERE name IN ('市容市貌', '违法建设'))
+                UNION ALL
+                SELECT year, month, workload FROM squad_records
+            ) GROUP BY year, month
+        `;
+        params = [];
     } else {
         query = `
             SELECT year, month, '工单量' as category, workload
@@ -236,7 +245,7 @@ app.get('/api/subject-stats', (req, res) => {
     }
 
     if (year && year !== 'all') {
-        query += " AND year = ?";
+        query = `SELECT * FROM (${query}) WHERE year = ?`;
         params.push(year);
     }
     query += " ORDER BY year DESC, month DESC";

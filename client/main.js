@@ -65,6 +65,12 @@ async function init() {
 
     if (analysisSubjectSelect) {
         analysisSubjectSelect.innerHTML = '';
+        const optGlobal = document.createElement('option');
+        optGlobal.value = `global:all`;
+        optGlobal.textContent = "全局";
+        optGlobal.style.fontWeight = "bold";
+        analysisSubjectSelect.appendChild(optGlobal);
+
         const grpSquads = document.createElement('optgroup');
         grpSquads.label = "直属大队监控列";
         squads.forEach(s => {
@@ -177,6 +183,8 @@ async function init() {
     if (analysisSubjectSelect) analysisSubjectSelect.addEventListener('change', loadDepartmentAnalysis);
     if (document.getElementById('analysis-year1-select')) document.getElementById('analysis-year1-select').addEventListener('change', loadDepartmentAnalysis);
     if (document.getElementById('analysis-year2-select')) document.getElementById('analysis-year2-select').addEventListener('change', loadDepartmentAnalysis);
+    if (document.getElementById('analysis-month1-select')) document.getElementById('analysis-month1-select').addEventListener('change', loadDepartmentAnalysis);
+    if (document.getElementById('analysis-month2-select')) document.getElementById('analysis-month2-select').addEventListener('change', loadDepartmentAnalysis);
 
     if (document.getElementById('thermal-year-select')) document.getElementById('thermal-year-select').addEventListener('change', loadThermalMatrix);
 
@@ -611,8 +619,6 @@ async function executeQueryAction() {
     const categories = combinedVals.filter(v => v.startsWith('category_')).map(v => v.split('_')[1]);
 
     const tbody = document.getElementById('query-results-tbody');
-    const summary = document.getElementById('query-summary');
-    const totalSum = document.getElementById('query-total-sum');
 
     if (years.length === 0 || months.length === 0) {
         alert('系统拦截: 请至少选取一个年度节点和一个月份节点');
@@ -730,9 +736,6 @@ async function executeQueryAction() {
                 </tr>
             `;
             tfoot.style.display = '';
-            
-            animateValue("query-total-sum", 0, totalRecords, 500);
-            summary.style.display = 'block';
         }
     } catch (e) {
         tbody.innerHTML = `<tr><td colspan="100" class="text-red">系统错误: ${e.message}</td></tr>`;
@@ -834,30 +837,49 @@ async function loadDepartmentAnalysis() {
     
     const year1 = document.getElementById('analysis-year1-select')?.value;
     const year2 = document.getElementById('analysis-year2-select')?.value;
-    const selectedYears = [year1, year2].filter(Boolean);
-    const uniqueSelectedYears = [...new Set(selectedYears)].sort((a, b) => b - a);
+    const month1 = document.getElementById('analysis-month1-select')?.value || 'all';
+    const month2 = document.getElementById('analysis-month2-select')?.value || 'all';
     
-    const data = rawData.filter(d => uniqueSelectedYears.includes(d.year.toString()));
+    // Create an array of selected year configs
+    const selectedConfigs = [
+        { year: year1, month: month1, key: `${year1}` },
+        { year: year2, month: month2, key: year1 === year2 ? `${year2} (对比)` : `${year2}` }
+    ].filter(c => c.year);
+    
+    // Filter to unique configurations based on year and month
+    const uniqueConfigs = [];
+    const seen = new Set();
+    for (const c of selectedConfigs) {
+        const id = `${c.year}-${c.month}`;
+        if (!seen.has(id)) {
+            seen.add(id);
+            uniqueConfigs.push(c);
+        }
+    }
+    uniqueConfigs.sort((a, b) => b.year - a.year);
+    
     const datasets = [];
     const statsContainer = document.getElementById('analysis-stats-container');
     statsContainer.innerHTML = ''; // 清空
 
     let totalSum = 0;
-    const yearTotals = {};
 
-    uniqueSelectedYears.forEach((y, i) => {
+    uniqueConfigs.forEach((cfg, i) => {
         const yearData = Array(12).fill(0);
-        let yearSum = 0;
-        data.filter(d => d.year == y).forEach(d => {
+        let configSum = 0;
+        
+        data.filter(d => d.year == cfg.year).forEach(d => {
             yearData[d.month - 1] += d.workload;
-            yearSum += d.workload;
+            if (cfg.month === 'all' || cfg.month == d.month) {
+                configSum += d.workload;
+            }
         });
         
-        yearTotals[y] = yearSum;
-        totalSum += yearSum;
+        totalSum += configSum;
+        const displayLabel = cfg.month === 'all' ? `${cfg.year}年度` : `${cfg.year}年${cfg.month}月`;
 
         datasets.push({ 
-            label: `${y}年度`, 
+            label: `${displayLabel}`, 
             data: yearData, 
             borderColor: CHART_COLORS[i % CHART_COLORS.length], 
             backgroundColor: CHART_COLORS[i % CHART_COLORS.length] + '20',
@@ -1157,18 +1179,7 @@ function exportQueryToCSV() {
         csvContent += cells.join(",") + "\r\n";
     });
 
-    // 额外追加合计行
-    const totalSumEl = document.getElementById('query-total-sum');
-    const summaryDiv = document.getElementById('query-summary');
-    if (totalSumEl && summaryDiv && summaryDiv.style.display !== 'none') {
-        const totalValue = totalSumEl.innerText.replace(/,/g, '');
-        // 构造一行为空，最后一列为合计的行（根据表头长度确定）
-        const colCount = rows[0].cells.length;
-        const totalRow = Array(colCount).fill("");
-        totalRow[0] = "合计所有筛选结果";
-        totalRow[colCount - 1] = totalValue;
-        csvContent += totalRow.join(",") + "\r\n";
-    }
+
 
     // 解决中文字符乱码问题：在文件开头添加 UTF-8 BOM
     const BOM = "\uFEFF";

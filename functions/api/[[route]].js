@@ -213,6 +213,16 @@ app.get('/subject-stats', async (c) => {
                 FROM squad_records
                 WHERE squad_id = ?1
             `;
+        } else if (type === 'global') {
+            query = `
+                SELECT year, month, '工单量' as category, SUM(workload) as workload FROM (
+                    SELECT year, month, workload FROM records WHERE category_id NOT IN (SELECT id FROM categories WHERE name IN ('市容市貌', '违法建设'))
+                    UNION ALL
+                    SELECT year, month, workload FROM squad_records
+                ) GROUP BY year, month
+            `;
+            // For global, we don't bind 'id' since it's not needed, but to avoid param binding issues we'll just not use id.
+            params = [];
         } else {
             query = `
                 SELECT year, month, '工单量' as category, workload
@@ -222,7 +232,7 @@ app.get('/subject-stats', async (c) => {
         }
 
         if (year && year !== 'all') {
-            query += " AND year = ?2";
+            query = `SELECT * FROM (${query}) WHERE year = ?${params.length + 1}`;
             params.push(year);
         }
         query += " ORDER BY year DESC, month DESC";

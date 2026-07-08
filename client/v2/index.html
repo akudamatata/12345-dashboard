@@ -317,9 +317,6 @@
                             <tfoot id="query-results-tfoot" style="display: none;"></tfoot>
                         </table>
                     </div>
-                    <div class="results-summary" id="query-summary" style="display:none;">
-                        当前筛选结果总计：<span class="text-gradient fw-bold" id="query-total-sum">0</span> 件
-                    </div>
                 </div>
             </section>
 
@@ -383,7 +380,15 @@
                     </div>
                     <div class="controls glass-pill">
                         <select id="analysis-year1-select" class="year-dd transparent-select"></select>
+                        <select id="analysis-month1-select" class="transparent-select">
+                            <option value="all">全年</option>
+                            <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+                        </select>
                         <select id="analysis-year2-select" class="year-dd transparent-select"></select>
+                        <select id="analysis-month2-select" class="transparent-select">
+                            <option value="all">全年</option>
+                            <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+                        </select>
                         <select id="analysis-subject-select" class="transparent-select"></select>
                     </div>
                 </header>
