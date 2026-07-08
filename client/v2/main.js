@@ -966,7 +966,9 @@ async function loadThermalMatrix() {
         let html = `
             <div class="thermal-header-row">
                 <div class="thermal-header-spacer"></div>
-                ${Array.from({length:12}, (_, i) => `<div class="thermal-header-month">${i+1}月</div>`).join('')}
+                <div class="thermal-header-months">
+                    ${Array.from({length:12}, (_, i) => `<div class="thermal-header-month">${i+1}月</div>`).join('')}
+                </div>
             </div>
         `;
 

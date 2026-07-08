@@ -858,6 +858,7 @@ h3.card-title::before {
 }
 .thermal-header-row { display: flex; margin-bottom: 15px; }
 .thermal-header-spacer { width: 140px; padding-right: 15px; }
+.thermal-header-months { display: flex; gap: 6px; }
 .thermal-header-month { 
     width: 32px; 
     text-align: center; 
