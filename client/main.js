@@ -183,8 +183,6 @@ async function init() {
     if (analysisSubjectSelect) analysisSubjectSelect.addEventListener('change', loadDepartmentAnalysis);
     if (document.getElementById('analysis-year1-select')) document.getElementById('analysis-year1-select').addEventListener('change', loadDepartmentAnalysis);
     if (document.getElementById('analysis-year2-select')) document.getElementById('analysis-year2-select').addEventListener('change', loadDepartmentAnalysis);
-    if (document.getElementById('analysis-month1-select')) document.getElementById('analysis-month1-select').addEventListener('change', loadDepartmentAnalysis);
-    if (document.getElementById('analysis-month2-select')) document.getElementById('analysis-month2-select').addEventListener('change', loadDepartmentAnalysis);
 
     if (document.getElementById('thermal-year-select')) document.getElementById('thermal-year-select').addEventListener('change', loadThermalMatrix);
 
@@ -837,49 +835,30 @@ async function loadDepartmentAnalysis() {
     
     const year1 = document.getElementById('analysis-year1-select')?.value;
     const year2 = document.getElementById('analysis-year2-select')?.value;
-    const month1 = document.getElementById('analysis-month1-select')?.value || 'all';
-    const month2 = document.getElementById('analysis-month2-select')?.value || 'all';
+    const selectedYears = [year1, year2].filter(Boolean);
+    const uniqueSelectedYears = [...new Set(selectedYears)].sort((a, b) => b - a);
     
-    // Create an array of selected year configs
-    const selectedConfigs = [
-        { year: year1, month: month1, key: `${year1}` },
-        { year: year2, month: month2, key: year1 === year2 ? `${year2} (对比)` : `${year2}` }
-    ].filter(c => c.year);
-    
-    // Filter to unique configurations based on year and month
-    const uniqueConfigs = [];
-    const seen = new Set();
-    for (const c of selectedConfigs) {
-        const id = `${c.year}-${c.month}`;
-        if (!seen.has(id)) {
-            seen.add(id);
-            uniqueConfigs.push(c);
-        }
-    }
-    uniqueConfigs.sort((a, b) => b.year - a.year);
-    
+    const data = rawData.filter(d => uniqueSelectedYears.includes(d.year.toString()));
     const datasets = [];
     const statsContainer = document.getElementById('analysis-stats-container');
     statsContainer.innerHTML = ''; // 清空
 
     let totalSum = 0;
+    const yearTotals = {};
 
-    uniqueConfigs.forEach((cfg, i) => {
+    uniqueSelectedYears.forEach((y, i) => {
         const yearData = Array(12).fill(0);
-        let configSum = 0;
-        
-        data.filter(d => d.year == cfg.year).forEach(d => {
+        let yearSum = 0;
+        data.filter(d => d.year == y).forEach(d => {
             yearData[d.month - 1] += d.workload;
-            if (cfg.month === 'all' || cfg.month == d.month) {
-                configSum += d.workload;
-            }
+            yearSum += d.workload;
         });
         
-        totalSum += configSum;
-        const displayLabel = cfg.month === 'all' ? `${cfg.year}年度` : `${cfg.year}年${cfg.month}月`;
+        yearTotals[y] = yearSum;
+        totalSum += yearSum;
 
         datasets.push({ 
-            label: `${displayLabel}`, 
+            label: `${y}年度`, 
             data: yearData, 
             borderColor: CHART_COLORS[i % CHART_COLORS.length], 
             backgroundColor: CHART_COLORS[i % CHART_COLORS.length] + '20',
