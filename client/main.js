@@ -1246,19 +1246,18 @@ async function exportMonthlyReport() {
 
         // ---- 列宽 ----
         ws.columns = [
-            { width: 3  },   // A 留空分隔
-            { width: 18 },   // B 大队建制
-            { width: 14 },   // C 市容市貌
-            { width: 14 },   // D 违法建设
-            { width: 12 },   // E 小计
-            { width: 4  },   // F 分隔列
-            { width: 32 },   // G 统计科目
-            { width: 16 },   // H 工单量
+            { width: 18 },   // A 大队建制
+            { width: 14 },   // B 市容市貌
+            { width: 14 },   // C 违法建设
+            { width: 12 },   // D 小计
+            { width: 4  },   // E 分隔列
+            { width: 32 },   // F 统计科目
+            { width: 16 },   // G 工单量
         ];
 
         // ====== 行1: 大标题 ======
-        const titleRow = ws.addRow([`${year}年${month}月 城管业务统计汇总表`, '', '', '', '', '', '', '']);
-        ws.mergeCells('A1:H1');
+        const titleRow = ws.addRow([`${year}年${month}月 城管业务统计汇总表`, '', '', '', '', '', '']);
+        ws.mergeCells('A1:G1');
         const titleCell = ws.getCell('A1');
         titleCell.font     = { bold: true, size: 16, color: { argb: COLOR_WHITE }, name: '微软雅黑' };
         titleCell.fill     = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_TITLE_BG } };
@@ -1266,10 +1265,10 @@ async function exportMonthlyReport() {
         titleRow.height = 36;
 
         // ====== 行2: 区块子标题 ======
-        const subRow = ws.addRow(['', '一、大队接件数明细 (市容 / 违建)', '', '', '', '', '二、全局业务宏观汇总', '']);
-        ws.mergeCells('B2:E2');
-        ws.mergeCells('G2:H2');
-        ['B2', 'G2'].forEach(addr => {
+        const subRow = ws.addRow(['一、大队接件数明细 (市容 / 违建)', '', '', '', '', '二、全局业务宏观汇总', '']);
+        ws.mergeCells('A2:D2');
+        ws.mergeCells('F2:G2');
+        ['A2', 'F2'].forEach(addr => {
             const c = ws.getCell(addr);
             c.font      = { bold: true, size: 11, color: { argb: COLOR_TITLE_BG }, name: '微软雅黑' };
             c.alignment = { vertical: 'middle', horizontal: 'left' };
@@ -1277,9 +1276,9 @@ async function exportMonthlyReport() {
         subRow.height = 24;
 
         // ====== 行3: 表头 ======
-        const headerRow = ws.addRow(['', '大队建制', '市容市貌', '违法建设', '小计', '', '统计科目', '工单量 (件)']);
+        const headerRow = ws.addRow(['大队建制', '市容市貌', '违法建设', '小计', '', '统计科目', '工单量 (件)']);
         headerRow.height = 22;
-        ['B', 'C', 'D', 'E', 'G', 'H'].forEach(col => {
+        ['A', 'B', 'C', 'D', 'F', 'G'].forEach(col => {
             const c = ws.getCell(`${col}3`);
             c.font      = { bold: true, size: 11, color: { argb: COLOR_TITLE_BG }, name: '微软雅黑' };
             c.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_HEADER_BG } };
@@ -1296,7 +1295,6 @@ async function exportMonthlyReport() {
             const rowBg = isAlt ? COLOR_ROW_ALT : COLOR_WHITE;
 
             const dataRow = ws.addRow([
-                '',
                 sq  ? sq.name  : '',
                 sq  ? sq.urban : '',
                 sq  ? sq.illegal : '',
@@ -1308,25 +1306,25 @@ async function exportMonthlyReport() {
             dataRow.height = 20;
 
             // 大队明细格
-            ['B', 'C', 'D', 'E'].forEach(col => {
+            ['A', 'B', 'C', 'D'].forEach(col => {
                 const c = ws.getCell(`${col}${dataRow.number}`);
                 c.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
-                c.alignment = { vertical: 'middle', horizontal: col === 'B' ? 'left' : 'center' };
+                c.alignment = { vertical: 'middle', horizontal: col === 'A' ? 'left' : 'center' };
                 c.border    = borderStyle;
                 c.font      = { size: 10, name: '微软雅黑', color: { argb: COLOR_TEXT_DARK } };
-                if (['C', 'D', 'E'].includes(col) && sq) {
+                if (['B', 'C', 'D'].includes(col) && sq) {
                     c.numFmt = '#,##0';
                 }
             });
 
             // 汇总格
-            ['G', 'H'].forEach(col => {
+            ['F', 'G'].forEach(col => {
                 const c = ws.getCell(`${col}${dataRow.number}`);
                 c.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
-                c.alignment = { vertical: 'middle', horizontal: col === 'G' ? 'left' : 'center' };
+                c.alignment = { vertical: 'middle', horizontal: col === 'F' ? 'left' : 'center' };
                 c.border    = borderStyle;
                 c.font      = { size: 10, name: '微软雅黑', color: { argb: COLOR_TEXT_DARK } };
-                if (col === 'H' && gen) c.numFmt = '#,##0';
+                if (col === 'G' && gen) c.numFmt = '#,##0';
             });
         }
 
@@ -1336,23 +1334,23 @@ async function exportMonthlyReport() {
         const genTotal     = generalRows.reduce((s, r) => s + r.val,   0);
 
         const totalRow = ws.addRow([
-            '', '合计 / 汇算求和', urbanTotal, illegalTotal, urbanTotal + illegalTotal,
+            '合计 / 汇算求和', urbanTotal, illegalTotal, urbanTotal + illegalTotal,
             '', '工单总计', genTotal
         ]);
         totalRow.height = 22;
 
-        ['B', 'C', 'D', 'E', 'G', 'H'].forEach(col => {
+        ['A', 'B', 'C', 'D', 'F', 'G'].forEach(col => {
             const c = ws.getCell(`${col}${totalRow.number}`);
             c.font      = { bold: true, size: 11, name: '微软雅黑', color: { argb: COLOR_TITLE_BG } };
             c.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_TOTAL_BG } };
-            c.alignment = { vertical: 'middle', horizontal: col === 'B' || col === 'G' ? 'left' : 'center' };
+            c.alignment = { vertical: 'middle', horizontal: col === 'A' || col === 'F' ? 'left' : 'center' };
             c.border    = {
                 top:    { style: 'medium', color: { argb: '1F497D' } },
                 left:   { style: 'thin',   color: { argb: COLOR_BORDER } },
                 bottom: { style: 'medium', color: { argb: '1F497D' } },
                 right:  { style: 'thin',   color: { argb: COLOR_BORDER } },
             };
-            if (['C', 'D', 'E', 'H'].includes(col)) c.numFmt = '#,##0';
+            if (['B', 'C', 'D', 'G'].includes(col)) c.numFmt = '#,##0';
         });
 
         // ====== 导出下载 ======
