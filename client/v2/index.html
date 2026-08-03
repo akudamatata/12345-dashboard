@@ -9,6 +9,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="./style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 
 <body>
@@ -494,7 +495,11 @@
                         </div>
                     </div>
 
-                    <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+                    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 1rem; margin-top: 1.5rem;">
+                        <button id="export-month-btn" class="btn"
+                            style="padding: 1rem 2rem; font-size: 1.1rem; border-radius: 8px; background: linear-gradient(135deg, #059669, #10b981); border: 1px solid rgba(16,185,129,0.4); color: #fff; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 0 20px rgba(16,185,129,0.25); transition: all 0.3s ease;">
+                            <span>📊</span> 导出当月表格
+                        </button>
                         <button id="save-btn" class="btn btn-primary"
                             style="padding: 1rem 2rem; font-size: 1.1rem; border-radius: 8px;">
                             同步固化并封存数据

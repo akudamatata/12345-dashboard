@@ -170,6 +170,7 @@ async function init() {
         });
     }
     if (document.getElementById('save-btn')) document.getElementById('save-btn').addEventListener('click', saveRecords);
+    if (document.getElementById('export-month-btn')) document.getElementById('export-month-btn').addEventListener('click', exportMonthlyReport);
     
     // Query Tools
     if (document.getElementById('query-search-btn')) document.getElementById('query-search-btn').addEventListener('click', executeQueryAction);
@@ -1175,4 +1176,156 @@ function exportQueryToCSV() {
     
     // 释放 URL 对象，防止内存泄漏
     setTimeout(() => URL.revokeObjectURL(url), 100);
+}
+
+// --- 导出当月统计表格 (与城管业务统计汇总表.xlsx 格式一致) ---
+async function exportMonthlyReport() {
+    const btn = document.getElementById('export-month-btn');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span> 生成中...';
+    btn.disabled = true;
+
+    try {
+        const year = document.getElementById('manage-year-select').value;
+        const month = manageMonthSelect.value;
+        if (!year || !month) { alert('请先选择年份和月份'); btn.innerHTML = originalHTML; btn.disabled = false; return; }
+
+        // 从页面读取大队明细数据
+        const squadRows = [];
+        document.querySelectorAll('#squad-entry-tbody tr').forEach(tr => {
+            const tds = tr.querySelectorAll('td');
+            const name = tds[0] ? tds[0].textContent.trim() : '';
+            const inputs = tr.querySelectorAll('.sq-input');
+            const urban = parseInt(inputs[0] ? inputs[0].value : '0') || 0;
+            const illegal = parseInt(inputs[1] ? inputs[1].value : '0') || 0;
+            if (name) squadRows.push({ name, urban, illegal });
+        });
+
+        // 从页面读取全局汇总数据
+        const generalRows = [];
+        document.querySelectorAll('#summary-entry-tbody tr').forEach(tr => {
+            const tds = tr.querySelectorAll('td');
+            const name = tds[0] ? tds[0].textContent.trim() : '';
+            const inp = tr.querySelector('input');
+            const val = parseInt(inp ? inp.value : '0') || 0;
+            if (name) generalRows.push({ name, val });
+        });
+
+        if (typeof XLSX === 'undefined') {
+            alert('SheetJS 库未加载，请检查网络连接后重试');
+            btn.innerHTML = originalHTML; btn.disabled = false;
+            return;
+        }
+
+        const wb = XLSX.utils.book_new();
+        const aoa = [];
+
+        // 行1: 标题 (A1:H1 合并)
+        aoa.push([`${year}年${month}月工单`, '', '', '', '', '', '', '']);
+        // 行2: 区块标题
+        aoa.push(['', '1. 大队接件数明细录入 (市容 / 违建)', '', '', '', '', '2. 全局业务宏观汇总表', '']);
+        // 行3: 表头
+        aoa.push(['', '大队建制', '市容市貌', '违法建设', '小计', '', '统计科目', '工单量 (件)']);
+
+        const dataStart = 4;
+        const squadLen = squadRows.length;
+        const genLen = generalRows.length;
+        const maxLen = Math.max(squadLen, genLen);
+
+        for (let i = 0; i < maxLen; i++) {
+            const sq = squadRows[i];
+            const gen = generalRows[i];
+            const excelRow = dataStart + i;
+            aoa.push([
+                '',
+                sq ? sq.name : '',
+                sq ? sq.urban : '',
+                sq ? sq.illegal : '',
+                sq ? { f: 'SUM(C' + excelRow + ':D' + excelRow + ')' } : '',
+                '',
+                gen ? gen.name : '',
+                gen ? gen.val : ''
+            ]);
+        }
+
+        const lastDataRow = dataStart + maxLen - 1;
+        aoa.push([
+            '',
+            '汇算求和',
+            { f: 'SUM(C' + dataStart + ':C' + lastDataRow + ')' },
+            { f: 'SUM(D' + dataStart + ':D' + lastDataRow + ')' },
+            { f: 'SUM(E' + dataStart + ':E' + lastDataRow + ')' },
+            '',
+            '工单汇总',
+            { f: 'SUM(H' + dataStart + ':H' + lastDataRow + ')' }
+        ]);
+
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+        ws['!cols'] = [
+            { wch: 3 }, { wch: 16 }, { wch: 14 }, { wch: 14 },
+            { wch: 10 }, { wch: 4 }, { wch: 30 }, { wch: 16 },
+        ];
+        ws['!rows'] = [{ hpt: 18 }, { hpt: 24 }, { hpt: 24 }];
+        for (let i = 0; i < maxLen; i++) ws['!rows'].push({ hpt: 20 });
+        ws['!rows'].push({ hpt: 20 });
+        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }];
+
+        const thinBorder = (color) => ({
+            top:    { style: 'thin', color: { rgb: color } },
+            bottom: { style: 'thin', color: { rgb: color } },
+            left:   { style: 'thin', color: { rgb: color } },
+            right:  { style: 'thin', color: { rgb: color } }
+        });
+        const S_TITLE    = { font: { bold: true, sz: 13, color: { rgb: '1E293B' } }, alignment: { horizontal: 'center', vertical: 'center' } };
+        const S_SECTION  = { font: { bold: true, sz: 12, color: { rgb: '1E293B' } }, alignment: { vertical: 'center' } };
+        const S_HEAD1    = { font: { bold: true, sz: 10, color: { rgb: 'FFFFFF' } }, fill: { patternType: 'solid', fgColor: { rgb: '1E293B' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: thinBorder('CBD5E1') };
+        const S_HEAD2    = { font: { bold: true, sz: 10, color: { rgb: 'FFFFFF' } }, fill: { patternType: 'solid', fgColor: { rgb: '0F172A' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: thinBorder('CBD5E1') };
+        const S_SUM      = { font: { bold: true, sz: 10, color: { rgb: '0F172A' } }, fill: { patternType: 'solid', fgColor: { rgb: 'E0F2FE' } }, border: thinBorder('CBD5E1') };
+        const S_GEN_SUM  = { font: { bold: true, sz: 10, color: { rgb: '0F172A' } }, fill: { patternType: 'solid', fgColor: { rgb: 'F1F5F9' } }, border: thinBorder('CBD5E1') };
+        function makeDataStyle(isEven, isRight) {
+            const s = { font: { sz: 10, color: { rgb: '334155' } }, alignment: { horizontal: isRight ? 'right' : 'left', vertical: 'center' }, border: thinBorder('E2E8F0') };
+            if (isEven) s.fill = { patternType: 'solid', fgColor: { rgb: 'F8FAFC' } };
+            return s;
+        }
+        function setStyle(r, c, style) {
+            const addr = XLSX.utils.encode_cell({ r, c });
+            if (!ws[addr]) ws[addr] = { t: 'z', v: '' };
+            ws[addr].s = style;
+        }
+
+        setStyle(0, 0, S_TITLE);
+        setStyle(1, 1, S_SECTION); setStyle(1, 6, S_SECTION);
+        [1, 2, 3, 4].forEach(c => setStyle(2, c, S_HEAD1));
+        [6, 7].forEach(c => setStyle(2, c, S_HEAD2));
+
+        for (let i = 0; i < maxLen; i++) {
+            const r = 3 + i, even = i % 2 === 1;
+            setStyle(r, 1, makeDataStyle(even, false));
+            setStyle(r, 2, makeDataStyle(even, true));
+            setStyle(r, 3, makeDataStyle(even, true));
+            setStyle(r, 4, makeDataStyle(even, true));
+            setStyle(r, 6, makeDataStyle(even, false));
+            setStyle(r, 7, makeDataStyle(even, true));
+        }
+
+        const lr = 3 + maxLen;
+        setStyle(lr, 1, Object.assign({}, S_SUM,     { alignment: { horizontal: 'left',  vertical: 'center' } }));
+        setStyle(lr, 2, Object.assign({}, S_SUM,     { alignment: { horizontal: 'right', vertical: 'center' } }));
+        setStyle(lr, 3, Object.assign({}, S_SUM,     { alignment: { horizontal: 'right', vertical: 'center' } }));
+        setStyle(lr, 4, Object.assign({}, S_SUM,     { alignment: { horizontal: 'right', vertical: 'center' } }));
+        setStyle(lr, 6, Object.assign({}, S_GEN_SUM, { alignment: { horizontal: 'left',  vertical: 'center' } }));
+        setStyle(lr, 7, Object.assign({}, S_GEN_SUM, { alignment: { horizontal: 'right', vertical: 'center' } }));
+
+        XLSX.utils.book_append_sheet(wb, ws, '业务统计汇总');
+        XLSX.writeFile(wb, `${year}年${month}月城管业务统计汇总表.xlsx`);
+
+        btn.innerHTML = '✅ 导出成功';
+        setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 2000);
+    } catch (e) {
+        console.error('导出失败:', e);
+        alert('导出失败: ' + e.message);
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+    }
 }
