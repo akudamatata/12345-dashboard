@@ -282,8 +282,10 @@ app.get('/api/advanced-query', (req, res) => {
     const monthFilterSR = monthList.length > 0 ? `AND sr.month IN (${monthPlaceholders})` : '';
     const squadFilterSR = squadList.length > 0 ? `AND sr.squad_id IN (${squadPlaceholders})` : '';
     
+    const queryAll = (categoryList.length === 0 && squadList.length === 0);
+
     // 1. From records (General categories + Totals for Urban/Illegal calculated from squad_records)
-    if (categoryList.length > 0 || squadList.length === 0) {
+    if (categoryList.length > 0 || queryAll) {
         let recQuery = `
             SELECT r.year, r.month, c.name as subject, 
                 CASE 
@@ -304,7 +306,7 @@ app.get('/api/advanced-query', (req, res) => {
     }
 
     // 2. From squad_records (Specific Squads)
-    if (squadList.length > 0) {
+    if (squadList.length > 0 || queryAll) {
         let squadQuery = `
             SELECT sr.year, sr.month, s.name as subject, SUM(sr.workload) as workload, 'squad' as type
             FROM squad_records sr

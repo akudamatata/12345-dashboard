@@ -282,7 +282,9 @@ app.get('/advanced-query', async (c) => {
         const yearFilterSR = cleanYears ? `AND sr.year IN (${cleanYears})` : '';
         const monthFilterSR = cleanMonths ? `AND sr.month IN (${cleanMonths})` : '';
         
-        if (cleanCats || !cleanSquads) {
+        const queryAll = (!cleanCats && !cleanSquads);
+
+        if (cleanCats || queryAll) {
             queries.push(`
                 SELECT r.year, r.month, c.name as subject, 
                     CASE 
@@ -300,12 +302,13 @@ app.get('/advanced-query', async (c) => {
             `);
         }
 
-        if (cleanSquads) {
+        if (cleanSquads || queryAll) {
+            const squadFilterSR = cleanSquads ? `AND sr.squad_id IN (${cleanSquads})` : '';
             queries.push(`
                 SELECT sr.year, sr.month, s.name as subject, SUM(sr.workload) as workload, 'squad' as type
                 FROM squad_records sr
                 JOIN squads s ON sr.squad_id = s.id
-                WHERE 1=1 ${yearFilterSR} ${monthFilterSR} AND sr.squad_id IN (${cleanSquads})
+                WHERE 1=1 ${yearFilterSR} ${monthFilterSR} ${squadFilterSR}
                 GROUP BY sr.year, sr.month, s.name, s.id
             `);
         }
