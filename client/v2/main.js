@@ -642,6 +642,10 @@ async function executeQueryAction() {
         const res = await fetch(`${API_BASE}/advanced-query?${query}`);
         const data = await res.json();
 
+        if (!res.ok || !Array.isArray(data)) {
+            throw new Error(data?.error || `服务器响应异常 (${res.status})`);
+        }
+
         const thead = document.querySelector('#view-query .glass-table thead');
         let tfoot = document.getElementById('query-results-tfoot');
         if (!tfoot) {

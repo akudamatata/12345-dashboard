@@ -275,8 +275,13 @@ app.get('/advanced-query', async (c) => {
         const cleanSquads = validateInts(squadList).join(',');
         const cleanCats = validateInts(categoryList).join(',');
         
-        const yearFilter = cleanYears ? `AND year IN (${cleanYears})` : '';
-        const monthFilter = cleanMonths ? `AND month IN (${cleanMonths})` : '';
+        const yearFilterR = cleanYears ? `AND r.year IN (${cleanYears})` : '';
+        const monthFilterR = cleanMonths ? `AND r.month IN (${cleanMonths})` : '';
+        const catFilterR = cleanCats ? `AND r.category_id IN (${cleanCats})` : '';
+
+        const yearFilterSR = cleanYears ? `AND sr.year IN (${cleanYears})` : '';
+        const monthFilterSR = cleanMonths ? `AND sr.month IN (${cleanMonths})` : '';
+        
         if (cleanCats || !cleanSquads) {
             queries.push(`
                 SELECT r.year, r.month, c.name as subject, 
@@ -291,22 +296,27 @@ app.get('/advanced-query', async (c) => {
                     'category' as type
                 FROM records r
                 JOIN categories c ON r.category_id = c.id
-                WHERE 1=1 ${yearFilter} ${monthFilter} ${catFilter}
+                WHERE 1=1 ${yearFilterR} ${monthFilterR} ${catFilterR}
             `);
         }
 
         if (cleanSquads) {
             queries.push(`
-                SELECT year, month, s.name as subject, workload, 'squad' as type
+                SELECT sr.year, sr.month, s.name as subject, SUM(sr.workload) as workload, 'squad' as type
                 FROM squad_records sr
                 JOIN squads s ON sr.squad_id = s.id
-                WHERE 1=1 ${yearFilter} ${monthFilter} AND squad_id IN (${cleanSquads}) ${catFilter}
+                WHERE 1=1 ${yearFilterSR} ${monthFilterSR} AND sr.squad_id IN (${cleanSquads})
+                GROUP BY sr.year, sr.month, s.name, s.id
             `);
+        }
+
+        if (queries.length === 0) {
+            return c.json([]);
         }
 
         const finalQuery = queries.join(" UNION ALL ") + " ORDER BY subject ASC, type ASC, year DESC, month DESC";
         const { results } = await c.env.DB.prepare(finalQuery).all();
-        return c.json(results);
+        return c.json(results || []);
         
     } catch (error) {
         return c.json({ error: error.message }, 500);

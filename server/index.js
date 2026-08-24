@@ -269,9 +269,18 @@ app.get('/api/advanced-query', (req, res) => {
     let params = [];
 
     // Base filters
-    const yearFilter = yearList.length > 0 ? `AND year IN (${yearList.map(() => '?').join(',')})` : '';
-    const monthFilter = monthList.length > 0 ? `AND month IN (${monthList.map(() => '?').join(',')})` : '';
-    const catFilter = categoryList.length > 0 ? `AND category_id IN (${categoryList.map(() => '?').join(',')})` : '';
+    const yearPlaceholders = yearList.map(() => '?').join(',');
+    const monthPlaceholders = monthList.map(() => '?').join(',');
+    const catPlaceholders = categoryList.map(() => '?').join(',');
+    const squadPlaceholders = squadList.map(() => '?').join(',');
+
+    const yearFilterR = yearList.length > 0 ? `AND r.year IN (${yearPlaceholders})` : '';
+    const monthFilterR = monthList.length > 0 ? `AND r.month IN (${monthPlaceholders})` : '';
+    const catFilterR = categoryList.length > 0 ? `AND r.category_id IN (${catPlaceholders})` : '';
+
+    const yearFilterSR = yearList.length > 0 ? `AND sr.year IN (${yearPlaceholders})` : '';
+    const monthFilterSR = monthList.length > 0 ? `AND sr.month IN (${monthPlaceholders})` : '';
+    const squadFilterSR = squadList.length > 0 ? `AND sr.squad_id IN (${squadPlaceholders})` : '';
     
     // 1. From records (General categories + Totals for Urban/Illegal calculated from squad_records)
     if (categoryList.length > 0 || squadList.length === 0) {
@@ -288,7 +297,7 @@ app.get('/api/advanced-query', (req, res) => {
                 'category' as type
             FROM records r
             JOIN categories c ON r.category_id = c.id
-            WHERE 1=1 ${yearFilter} ${monthFilter} ${catFilter}
+            WHERE 1=1 ${yearFilterR} ${monthFilterR} ${catFilterR}
         `;
         queries.push(recQuery);
         params.push(...yearList, ...monthList, ...categoryList);
@@ -296,22 +305,26 @@ app.get('/api/advanced-query', (req, res) => {
 
     // 2. From squad_records (Specific Squads)
     if (squadList.length > 0) {
-        const squadFilter = `AND squad_id IN (${squadList.map(() => '?').join(',')})`;
         let squadQuery = `
-            SELECT year, month, s.name as subject, workload, 'squad' as type
+            SELECT sr.year, sr.month, s.name as subject, SUM(sr.workload) as workload, 'squad' as type
             FROM squad_records sr
             JOIN squads s ON sr.squad_id = s.id
-            WHERE 1=1 ${yearFilter} ${monthFilter} ${squadFilter} ${catFilter}
+            WHERE 1=1 ${yearFilterSR} ${monthFilterSR} ${squadFilterSR}
+            GROUP BY sr.year, sr.month, s.name, s.id
         `;
         queries.push(squadQuery);
-        params.push(...yearList, ...monthList, ...squadList, ...categoryList);
+        params.push(...yearList, ...monthList, ...squadList);
+    }
+
+    if (queries.length === 0) {
+        return res.json([]);
     }
 
     const finalQuery = queries.join(" UNION ALL ") + " ORDER BY subject ASC, type ASC, year DESC, month DESC";
     
     db.all(finalQuery, params, (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
+        res.json(rows || []);
     });
 });
 
