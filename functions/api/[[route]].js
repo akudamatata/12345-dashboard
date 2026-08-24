@@ -277,16 +277,21 @@ app.get('/advanced-query', async (c) => {
         
         const yearFilter = cleanYears ? `AND year IN (${cleanYears})` : '';
         const monthFilter = cleanMonths ? `AND month IN (${cleanMonths})` : '';
-        const catFilter = cleanCats ? `AND category_id IN (${cleanCats})` : '';
-        
-        const skipAggregated = cleanSquads ? "AND category_id NOT IN (SELECT id FROM categories WHERE name IN ('市容市貌', '违法建设'))" : "";
-        
         if (cleanCats || !cleanSquads) {
             queries.push(`
-                SELECT year, month, c.name as subject, workload, 'category' as type
+                SELECT r.year, r.month, c.name as subject, 
+                    CASE 
+                        WHEN c.name IN ('市容市貌', '违法建设') THEN (
+                            SELECT COALESCE(SUM(sr.workload), 0)
+                            FROM squad_records sr 
+                            WHERE sr.category_id = c.id AND sr.year = r.year AND sr.month = r.month
+                        )
+                        ELSE r.workload 
+                    END as workload, 
+                    'category' as type
                 FROM records r
                 JOIN categories c ON r.category_id = c.id
-                WHERE 1=1 ${yearFilter} ${monthFilter} ${catFilter} ${skipAggregated}
+                WHERE 1=1 ${yearFilter} ${monthFilter} ${catFilter}
             `);
         }
 

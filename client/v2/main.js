@@ -2,15 +2,16 @@ const API_BASE = '/api';
 
 // Nexus Color Palette for Dark Glassmorphism 
 const CHART_COLORS = [
-    '#0a84ff', '#5e5ce6', '#ff453a', '#32d74b', '#ff9f0a', 
-    '#ff375f', '#bf5af2', '#64d2ff', '#30d158', '#ffcc00',
-    '#ff9f0a', '#5ac8fa', '#b051f5', '#ff6482', '#007aff'
+    '#00f3ff', '#bd00ff', '#ff007a', '#00e676', '#facc15', 
+    '#ff3b3b', '#a855f7', '#0ea5e9', '#10b981', '#f43f5e',
+    '#fbbf24', '#2dd4bf', '#8b5cf6', '#ec4899', '#3b82f6'
 ];
 
 // State Layers
 let years = [];
 let categories = [];
 let squads = [];
+let currentQueryDataCache = null;
 
 // Chart References 
 let charts = {
@@ -175,7 +176,16 @@ async function init() {
     // Query Tools
     if (document.getElementById('query-search-btn')) document.getElementById('query-search-btn').addEventListener('click', executeQueryAction);
     if (document.getElementById('query-reset-btn')) document.getElementById('query-reset-btn').addEventListener('click', () => resetChecklists('query', [years[0]]));
-    if (document.getElementById('query-export-btn')) document.getElementById('query-export-btn').addEventListener('click', exportQueryToCSV);
+    if (document.getElementById('query-export-btn')) document.getElementById('query-export-btn').addEventListener('click', showExportModeModal);
+    if (document.getElementById('modal-close-btn')) document.getElementById('modal-close-btn').addEventListener('click', closeExportModal);
+    if (document.getElementById('export-mode-breakdown')) document.getElementById('export-mode-breakdown').addEventListener('click', () => exportQueryToExcel('breakdown'));
+    if (document.getElementById('export-mode-summary')) document.getElementById('export-mode-summary').addEventListener('click', () => exportQueryToExcel('summary'));
+    const expModal = document.getElementById('query-export-modal');
+    if (expModal) {
+        expModal.addEventListener('click', (e) => {
+            if (e.target === expModal) closeExportModal();
+        });
+    }
     
     // Comparison Tools
     if (document.getElementById('comp-search-btn')) document.getElementById('comp-search-btn').addEventListener('click', executeComparisonAction);
@@ -211,15 +221,15 @@ async function init() {
     });
 
 
-    Chart.defaults.color = '#9e9ea7';
-    Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, sans-serif";
-    Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(30, 30, 35, 0.85)';
+    Chart.defaults.color = '#8c8cab';
+    Chart.defaults.font.family = "'Inter', -apple-system, sans-serif";
+    Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(31, 31, 49, 0.95)';
     Chart.defaults.plugins.tooltip.titleColor = '#ffffff';
-    Chart.defaults.plugins.tooltip.bodyColor = '#e2e8f0';
-    Chart.defaults.plugins.tooltip.borderColor = 'rgba(255, 255, 255, 0.1)';
+    Chart.defaults.plugins.tooltip.bodyColor = '#00f3ff';
+    Chart.defaults.plugins.tooltip.borderColor = 'rgba(0, 243, 255, 0.3)';
     Chart.defaults.plugins.tooltip.borderWidth = 1;
     Chart.defaults.plugins.tooltip.padding = 12;
-    Chart.defaults.plugins.tooltip.cornerRadius = 10;
+    Chart.defaults.plugins.tooltip.cornerRadius = 8;
     
     // Add glowing drop shadow to lines if supported, or just keep them thick.
     // Shadow manipulation will be handled mostly by thick lines and gradients.
@@ -294,8 +304,8 @@ async function loadDashboard() {
     if(!trendCanvas) return;
     
     const gradient = trendCanvas.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, 'rgba(10, 132, 255, 0.3)');
-    gradient.addColorStop(1, 'rgba(10, 132, 255, 0.0)');
+    gradient.addColorStop(0, 'rgba(0, 243, 255, 0.6)');
+    gradient.addColorStop(1, 'rgba(0, 243, 255, 0.01)');
 
     charts.dashboardTrend = new Chart(trendCanvas, {
         type: 'line',
@@ -304,11 +314,11 @@ async function loadDashboard() {
             datasets: [{ 
                 label: '全委业务波形', 
                 data: trendValues, 
-                borderColor: '#0a84ff', 
-                borderWidth: 3,
-                pointBackgroundColor: '#0a84ff',
-                pointBorderColor: '#ffffff',
-                pointBorderWidth: 2,
+                borderColor: '#00f3ff', 
+                borderWidth: 4,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: '#00f3ff',
+                pointBorderWidth: 3,
                 pointRadius: 5,
                 pointHoverRadius: 8,
                 tension: 0.45, 
@@ -709,15 +719,22 @@ async function executeQueryAction() {
                 `;
             }).join('');
 
-            // Calculate column totals
+            // Calculate column totals & grand total without duplicate counting:
+            // When squads are present, Urban/Illegal from categories are displayed in the table,
+            // but excluded from bottom column totals because squad totals already aggregate them.
+            const hasSquads = subjectEntries.some(([_, info]) => info.type === 'squad');
             const columnTotals = {};
+            let grandTotal = 0;
             timeNodes.forEach(tn => {
-                columnTotals[tn] = 0;
-            });
-            subjectEntries.forEach(([subject, info, total]) => {
-                timeNodes.forEach(tn => {
-                    columnTotals[tn] += (info.workloads[tn] || 0);
+                let colSum = 0;
+                subjectEntries.forEach(([subject, info]) => {
+                    if (hasSquads && info.type === 'category' && (subject === '市容市貌' || subject === '违法建设')) {
+                        return; // Prevent double counting
+                    }
+                    colSum += (info.workloads[tn] || 0);
                 });
+                columnTotals[tn] = colSum;
+                grandTotal += colSum;
             });
 
             const footerCols = timeNodes.map(tn => {
@@ -729,10 +746,21 @@ async function executeQueryAction() {
                 <tr class="total-row glass-highlight">
                     <td><span class="fw-bold">汇总合计</span></td>
                     ${footerCols}
-                    <td><b class="text-gradient number-font" style="font-size:1.1rem;">${totalRecords.toLocaleString()}</b></td>
+                    <td><b class="text-gradient number-font" style="font-size:1.1rem;">${grandTotal.toLocaleString()}</b></td>
                 </tr>
             `;
             tfoot.style.display = '';
+
+            // Cache query results for Excel export
+            currentQueryDataCache = {
+                timeNodes,
+                subjectEntries,
+                hasSquads,
+                columnTotals,
+                grandTotal,
+                years,
+                months
+            };
         }
     } catch (e) {
         tbody.innerHTML = `<tr><td colspan="100" class="text-red">系统错误: ${e.message}</td></tr>`;
@@ -741,6 +769,7 @@ async function executeQueryAction() {
             tfoot.innerHTML = '';
             tfoot.style.display = 'none';
         }
+        currentQueryDataCache = null;
     } finally {
         btn.disabled = false;
     }
@@ -783,8 +812,8 @@ async function executeComparisonAction() {
             return {
                 label: `[${y}] 年度截面`,
                 data: yearData,
-                backgroundColor: i === 0 ? 'rgba(10, 132, 255, 0.8)' : (i === 1 ? 'rgba(94, 92, 230, 0.8)' : CHART_COLORS[(i + 5)%CHART_COLORS.length]),
-                borderColor: i === 0 ? '#0a84ff' : (i === 1 ? '#5e5ce6' : CHART_COLORS[(i + 5)%CHART_COLORS.length]),
+                backgroundColor: i === 0 ? 'rgba(0, 243, 255, 0.8)' : (i === 1 ? 'rgba(189, 0, 255, 0.8)' : CHART_COLORS[(i + 5)%CHART_COLORS.length]),
+                borderColor: i === 0 ? '#00f3ff' : (i === 1 ? '#bd00ff' : CHART_COLORS[(i + 5)%CHART_COLORS.length]),
                 borderWidth: 0,
                 borderRadius: 6,
                 borderSkipped: false
@@ -1122,63 +1151,307 @@ function initCustomSelects() {
     });
 }
 
-function exportQueryToCSV() {
-    const table = document.querySelector('#view-query .glass-table');
-    if (!table) return;
-
-    const rows = Array.from(table.rows);
-    // 如果只有表头或者显示暂无数据，则拦截
-    if (rows.length <= 1 || rows[1].classList.contains('no-data')) {
+function showExportModeModal() {
+    if (!currentQueryDataCache || !currentQueryDataCache.subjectEntries || currentQueryDataCache.subjectEntries.length === 0) {
         alert("当前没有可导出的查询结果，请先执行查询。");
         return;
     }
-
-    let csvContent = "";
-    
-    rows.forEach((row, rowIndex) => {
-        const cells = Array.from(row.cells).map((cell, colIndex) => {
-            // 提取纯文本，去除图标字符和换行
-            let text = cell.innerText.replace(/\n/g, ' ').replace(/\s\s+/g, ' ').trim();
-            
-            // 如果是首列（统计对象列），且不是第一行（标题行），则剥离“ 大队”或“ 业务类”后缀
-            if (colIndex === 0 && rowIndex > 0) {
-                text = text.replace(/\s(大队|业务类)$/, '');
-            }
-
-            // 处理 CSV 特殊字符：如果包含引号，需要转义；如果包含逗号或换行，整个字段需由引号包裹
-            if (text.includes('"')) {
-                text = text.replace(/"/g, '""');
-            }
-            if (text.includes(',') || text.includes('"')) {
-                text = `"${text}"`;
-            }
-            return text;
-        });
-        csvContent += cells.join(",") + "\r\n";
-    });
-
-
-
-    // 解决中文字符乱码问题：在文件开头添加 UTF-8 BOM
-    const BOM = "\uFEFF";
-    const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    
-    const token = new Date().getTime().toString().slice(-6);
-    const link = document.createElement("a");
-    link.className = "hidden-exporter";
-    link.setAttribute("href", url);
-    link.setAttribute("download", `12345_查询报表_${new Date().toLocaleDateString()}_${token}.csv`);
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // 释放 URL 对象，防止内存泄漏
-    setTimeout(() => URL.revokeObjectURL(url), 100);
+    const modal = document.getElementById('query-export-modal');
+    if (modal) {
+        modal.classList.add('active');
+    } else {
+        exportQueryToExcel('breakdown');
+    }
 }
 
-// --- 导出当月统计表格 (与城管业务统计汇总表.xlsx 格式一致) ---
+function closeExportModal() {
+    const modal = document.getElementById('query-export-modal');
+    if (modal) modal.classList.remove('active');
+}
+
+// --- 导出查询结果为标准 Excel 报表 ---
+async function exportQueryToExcel(mode = 'breakdown') {
+    closeExportModal();
+    const btn = document.getElementById('query-export-btn');
+    const originalHTML = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.innerHTML = '<span class="spinner"></span> 导出中...';
+        btn.disabled = true;
+    }
+
+    try {
+        if (!currentQueryDataCache || !currentQueryDataCache.subjectEntries || currentQueryDataCache.subjectEntries.length === 0) {
+            alert('当前没有可导出的查询结果，请先执行查询。');
+            if (btn) { btn.innerHTML = originalHTML; btn.disabled = false; }
+            return;
+        }
+
+        if (typeof ExcelJS === 'undefined') {
+            alert('ExcelJS 组件加载失败，请刷新页面后重试');
+            if (btn) { btn.innerHTML = originalHTML; btn.disabled = false; }
+            return;
+        }
+
+        const { timeNodes, subjectEntries, columnTotals, grandTotal, years, months } = currentQueryDataCache;
+
+        // ---- 统一配色标准 (与数据录入导出保持高度一致) ----
+        const COLOR_TITLE_BG   = '1F497D'; // 深蓝 - 标题背景
+        const COLOR_HEADER_BG  = 'D9E1F2'; // 浅蓝 - 表头背景
+        const COLOR_TOTAL_BG   = 'FFF2CC'; // 浅黄 - 汇总行背景
+        const COLOR_ROW_ALT    = 'F5F7FB'; // 交替行浅灰
+        const COLOR_WHITE      = 'FFFFFF';
+        const COLOR_BORDER     = '9DC3E6'; // 边框蓝灰
+        const COLOR_TEXT_DARK  = '1A1A2E';
+
+        const borderStyle = {
+            top:    { style: 'thin', color: { argb: COLOR_BORDER } },
+            left:   { style: 'thin', color: { argb: COLOR_BORDER } },
+            bottom: { style: 'thin', color: { argb: COLOR_BORDER } },
+            right:  { style: 'thin', color: { argb: COLOR_BORDER } }
+        };
+
+        const wb = new ExcelJS.Workbook();
+        wb.creator = '12345 态势感知平台';
+        wb.created = new Date();
+
+        const yearLabel = years.length === 1 ? `${years[0]}年度` : `${years.join('、')}年度`;
+        const monthLabel = months.length === 12 ? '全年(1-12月)' : (months.length > 1 ? `${Math.min(...months)}-${Math.max(...months)}月` : `${months[0]}月`);
+        const timeRangeText = `${yearLabel} ${monthLabel}`;
+
+        if (mode === 'breakdown') {
+            // ================= 模式 1：月度明细表 (单月逐列展示 + 汇总共计) =================
+            const ws = wb.addWorksheet('月度明细检索表', {
+                pageSetup: { orientation: 'landscape', fitToPage: true }
+            });
+
+            // 列宽分配
+            const colDefs = [
+                { width: 22 }, // A 统计对象
+                { width: 14 }, // B 部门类别
+                ...timeNodes.map(() => ({ width: 15 })), // 各时间节点
+                { width: 16 }  // 汇总共计
+            ];
+            ws.columns = colDefs;
+            const totalCols = colDefs.length;
+
+            // 行1: 大标题
+            const titleRow = ws.addRow([`${timeRangeText} 城管业务统计检索结果明细表`, ...Array(totalCols - 1).fill('')]);
+            ws.mergeCells(1, 1, 1, totalCols);
+            const titleCell = ws.getCell('A1');
+            titleCell.font      = { bold: true, size: 15, color: { argb: COLOR_WHITE }, name: '微软雅黑' };
+            titleCell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_TITLE_BG } };
+            titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+            titleRow.height = 36;
+
+            // 行2: 副标题/检索条件信息
+            const metaRow = ws.addRow([`检索区间: ${timeRangeText}    |    导出时间: ${new Date().toLocaleString('zh-CN')}    |    直属大队与全局业务类多维汇总`, ...Array(totalCols - 1).fill('')]);
+            ws.mergeCells(2, 1, 2, totalCols);
+            const metaCell = ws.getCell('A2');
+            metaCell.font      = { size: 9.5, color: { argb: '595959' }, name: '微软雅黑', italic: true };
+            metaCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+            metaRow.height = 20;
+
+            // 行3: 表头
+            const headerValues = ['统计对象', '类型', ...timeNodes, '汇总共计'];
+            const headerRow = ws.addRow(headerValues);
+            headerRow.height = 24;
+            for (let c = 1; c <= totalCols; c++) {
+                const cell = headerRow.getCell(c);
+                cell.font      = { bold: true, size: 10.5, color: { argb: COLOR_TITLE_BG }, name: '微软雅黑' };
+                cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_HEADER_BG } };
+                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                cell.border    = borderStyle;
+            }
+
+            // 行4+: 数据行
+            subjectEntries.forEach(([subject, info, total], idx) => {
+                const isAlt = (idx % 2 === 1);
+                const rowBg = isAlt ? COLOR_ROW_ALT : COLOR_WHITE;
+                const nodeVals = timeNodes.map(tn => info.workloads[tn] || 0);
+
+                const rowValues = [
+                    subject,
+                    info.type === 'squad' ? '直属大队' : '业务类',
+                    ...nodeVals,
+                    total
+                ];
+                const dRow = ws.addRow(rowValues);
+                dRow.height = 20;
+
+                for (let c = 1; c <= totalCols; c++) {
+                    const cell = dRow.getCell(c);
+                    cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+                    cell.border = borderStyle;
+                    cell.font   = { size: 10, name: '微软雅黑', color: { argb: COLOR_TEXT_DARK } };
+
+                    if (c === 1) {
+                        cell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+                        cell.font      = { bold: true, size: 10, name: '微软雅黑', color: { argb: COLOR_TEXT_DARK } };
+                    } else if (c === 2) {
+                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                        cell.font      = { size: 9.5, name: '微软雅黑', color: { argb: info.type === 'squad' ? '1F497D' : '048A81' } };
+                    } else {
+                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                        cell.numFmt    = '#,##0';
+                        if (c === totalCols) {
+                            cell.font = { bold: true, size: 10.5, name: '微软雅黑', color: { argb: COLOR_TITLE_BG } };
+                        }
+                    }
+                }
+            });
+
+            // 汇总合计行
+            const footerNodeVals = timeNodes.map(tn => columnTotals[tn] || 0);
+            const totalRowVals = [
+                '汇总合计',
+                '全局总计',
+                ...footerNodeVals,
+                grandTotal
+            ];
+            const fRow = ws.addRow(totalRowVals);
+            fRow.height = 24;
+
+            for (let c = 1; c <= totalCols; c++) {
+                const cell = fRow.getCell(c);
+                cell.font      = { bold: true, size: 11, name: '微软雅黑', color: { argb: COLOR_TITLE_BG } };
+                cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_TOTAL_BG } };
+                cell.alignment = { vertical: 'middle', horizontal: c <= 2 ? 'center' : 'center' };
+                cell.border    = {
+                    top:    { style: 'medium', color: { argb: COLOR_TITLE_BG } },
+                    left:   { style: 'thin',   color: { argb: COLOR_BORDER } },
+                    bottom: { style: 'medium', color: { argb: COLOR_TITLE_BG } },
+                    right:  { style: 'thin',   color: { argb: COLOR_BORDER } },
+                };
+                if (c > 2) cell.numFmt = '#,##0';
+            }
+
+        } else {
+            // ================= 模式 2：区间总和表 (仅一组合并总和数据) =================
+            const ws = wb.addWorksheet('区间业务总量汇总表', {
+                pageSetup: { orientation: 'portrait', fitToPage: true }
+            });
+
+            ws.columns = [
+                { width: 22 }, // A 统计对象
+                { width: 14 }, // B 部门类别
+                { width: 24 }, // C 区间工单总量 (件)
+                { width: 18 }  // D 业务占比
+            ];
+            const totalCols = 4;
+
+            // 行1: 大标题
+            const titleRow = ws.addRow([`${timeRangeText} 城管业务统计检索区间汇总表`, '', '', '']);
+            ws.mergeCells('A1:D1');
+            const titleCell = ws.getCell('A1');
+            titleCell.font      = { bold: true, size: 15, color: { argb: COLOR_WHITE }, name: '微软雅黑' };
+            titleCell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_TITLE_BG } };
+            titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+            titleRow.height = 36;
+
+            // 行2: 检索元数据
+            const metaRow = ws.addRow([`检索区间: ${timeRangeText}    |    导出时间: ${new Date().toLocaleString('zh-CN')}    |    区间合并总量`, '', '', '']);
+            ws.mergeCells('A2:D2');
+            const metaCell = ws.getCell('A2');
+            metaCell.font      = { size: 9.5, color: { argb: '595959' }, name: '微软雅黑', italic: true };
+            metaCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+            metaRow.height = 20;
+
+            // 行3: 表头
+            const headerRow = ws.addRow(['统计对象', '类型', `区间工单总量 (件)`, '工单占比']);
+            headerRow.height = 24;
+            for (let c = 1; c <= totalCols; c++) {
+                const cell = headerRow.getCell(c);
+                cell.font      = { bold: true, size: 11, color: { argb: COLOR_TITLE_BG }, name: '微软雅黑' };
+                cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_HEADER_BG } };
+                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                cell.border    = borderStyle;
+            }
+
+            // 行4+: 数据行
+            subjectEntries.forEach(([subject, info, total], idx) => {
+                const isAlt = (idx % 2 === 1);
+                const rowBg = isAlt ? COLOR_ROW_ALT : COLOR_WHITE;
+                const ratio = grandTotal > 0 ? (total / grandTotal) : 0;
+
+                const dRow = ws.addRow([
+                    subject,
+                    info.type === 'squad' ? '直属大队' : '业务类',
+                    total,
+                    ratio
+                ]);
+                dRow.height = 20;
+
+                for (let c = 1; c <= totalCols; c++) {
+                    const cell = dRow.getCell(c);
+                    cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+                    cell.border = borderStyle;
+                    cell.font   = { size: 10, name: '微软雅黑', color: { argb: COLOR_TEXT_DARK } };
+
+                    if (c === 1) {
+                        cell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+                        cell.font      = { bold: true, size: 10, name: '微软雅黑' };
+                    } else if (c === 2) {
+                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                        cell.font      = { size: 9.5, name: '微软雅黑', color: { argb: info.type === 'squad' ? '1F497D' : '048A81' } };
+                    } else if (c === 3) {
+                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                        cell.numFmt    = '#,##0';
+                        cell.font      = { bold: true, size: 10.5, name: '微软雅黑', color: { argb: COLOR_TITLE_BG } };
+                    } else if (c === 4) {
+                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                        cell.numFmt    = '0.0%';
+                    }
+                }
+            });
+
+            // 汇总合计行
+            const fRow = ws.addRow(['汇总合计', '全局总计', grandTotal, 1.0]);
+            fRow.height = 24;
+            for (let c = 1; c <= totalCols; c++) {
+                const cell = fRow.getCell(c);
+                cell.font      = { bold: true, size: 11, name: '微软雅黑', color: { argb: COLOR_TITLE_BG } };
+                cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_TOTAL_BG } };
+                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                cell.border    = {
+                    top:    { style: 'medium', color: { argb: COLOR_TITLE_BG } },
+                    left:   { style: 'thin',   color: { argb: COLOR_BORDER } },
+                    bottom: { style: 'medium', color: { argb: COLOR_TITLE_BG } },
+                    right:  { style: 'thin',   color: { argb: COLOR_BORDER } },
+                };
+                if (c === 3) cell.numFmt = '#,##0';
+                if (c === 4) cell.numFmt = '0.0%';
+            }
+        }
+
+        // ====== 导出并下载文件 ======
+        const buffer = await wb.xlsx.writeBuffer();
+        const blob   = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url    = URL.createObjectURL(blob);
+        const link   = document.createElement('a');
+        link.href     = url;
+        const modeSuffix = mode === 'breakdown' ? '月度明细' : '区间总和';
+        link.download = `${timeRangeText.replace(/\s+/g, '_')}_城管业务统计检索表_${modeSuffix}.xlsx`;
+        link.className = 'hidden-exporter';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        if (btn) {
+            btn.innerHTML = '✅ 导出成功';
+            setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 2000);
+        }
+    } catch (e) {
+        console.error('Excel 导出失败:', e);
+        alert('导出失败: ' + e.message);
+        if (btn) {
+            btn.innerHTML = originalHTML;
+            btn.disabled = false;
+        }
+    }
+}
+
+// --- 导出当月统计表格 ---
 async function exportMonthlyReport() {
     const btn = document.getElementById('export-month-btn');
     const originalHTML = btn.innerHTML;
@@ -1188,7 +1461,10 @@ async function exportMonthlyReport() {
     try {
         const year = document.getElementById('manage-year-select').value;
         const month = manageMonthSelect.value;
-        if (!year || !month) { alert('请先选择年份和月份'); btn.innerHTML = originalHTML; btn.disabled = false; return; }
+        if (!year || !month) {
+            alert('请先选择年份和月份');
+            btn.innerHTML = originalHTML; btn.disabled = false; return;
+        }
 
         // 从页面读取大队明细数据
         const squadRows = [];
@@ -1211,114 +1487,157 @@ async function exportMonthlyReport() {
             if (name) generalRows.push({ name, val });
         });
 
-        if (typeof XLSX === 'undefined') {
-            alert('SheetJS 库未加载，请检查网络连接后重试');
+        if (typeof ExcelJS === 'undefined') {
+            alert('ExcelJS 库加载失败，请刷新页面后重试');
             btn.innerHTML = originalHTML; btn.disabled = false;
             return;
         }
 
-        const wb = XLSX.utils.book_new();
-        const aoa = [];
+        // ---- 样式常量 ----
+        const COLOR_TITLE_BG   = '1F497D'; // 深蓝 - 标题背景
+        const COLOR_HEADER_BG  = 'D9E1F2'; // 浅蓝 - 表头背景
+        const COLOR_TOTAL_BG   = 'FFF2CC'; // 浅黄 - 汇总行背景
+        const COLOR_ROW_ALT    = 'F5F7FB'; // 交替行浅灰
+        const COLOR_WHITE      = 'FFFFFF';
+        const COLOR_BORDER     = '9DC3E6'; // 边框蓝灰
+        const COLOR_TEXT_DARK  = '1A1A2E';
 
-        // 行1: 标题 (A1:H1 合并)
-        aoa.push([`${year}年${month}月工单`, '', '', '', '', '', '', '']);
-        // 行2: 区块标题
-        aoa.push(['', '1. 大队接件数明细录入 (市容 / 违建)', '', '', '', '', '2. 全局业务宏观汇总表', '']);
-        // 行3: 表头
-        aoa.push(['', '大队建制', '市容市貌', '违法建设', '小计', '', '统计科目', '工单量 (件)']);
+        const borderStyle = {
+            top:    { style: 'thin', color: { argb: COLOR_BORDER } },
+            left:   { style: 'thin', color: { argb: COLOR_BORDER } },
+            bottom: { style: 'thin', color: { argb: COLOR_BORDER } },
+            right:  { style: 'thin', color: { argb: COLOR_BORDER } }
+        };
 
-        const dataStart = 4;
-        const squadLen = squadRows.length;
-        const genLen = generalRows.length;
-        const maxLen = Math.max(squadLen, genLen);
+        const wb = new ExcelJS.Workbook();
+        wb.creator = '12345 态势感知平台';
+        wb.created = new Date();
 
+        const ws = wb.addWorksheet('业务统计汇总', {
+            pageSetup: { orientation: 'landscape', fitToPage: true }
+        });
+
+        // ---- 列宽 ----
+        ws.columns = [
+            { width: 18 },   // A 大队建制
+            { width: 14 },   // B 市容市貌
+            { width: 14 },   // C 违法建设
+            { width: 12 },   // D 小计
+            { width: 4  },   // E 分隔列
+            { width: 32 },   // F 统计科目
+            { width: 16 },   // G 工单量
+        ];
+
+        // ====== 行1: 大标题 ======
+        const titleRow = ws.addRow([`${year}年${month}月 城管业务统计汇总表`, '', '', '', '', '', '']);
+        ws.mergeCells('A1:G1');
+        const titleCell = ws.getCell('A1');
+        titleCell.font     = { bold: true, size: 16, color: { argb: COLOR_WHITE }, name: '微软雅黑' };
+        titleCell.fill     = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_TITLE_BG } };
+        titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+        titleRow.height = 36;
+
+        // ====== 行2: 区块子标题 ======
+        const subRow = ws.addRow(['一、大队接件数明细 (市容 / 违建)', '', '', '', '', '二、全局业务宏观汇总', '']);
+        ws.mergeCells('A2:D2');
+        ws.mergeCells('F2:G2');
+        ['A2', 'F2'].forEach(addr => {
+            const c = ws.getCell(addr);
+            c.font      = { bold: true, size: 11, color: { argb: COLOR_TITLE_BG }, name: '微软雅黑' };
+            c.alignment = { vertical: 'middle', horizontal: 'left' };
+        });
+        subRow.height = 24;
+
+        // ====== 行3: 表头 ======
+        const headerRow = ws.addRow(['大队建制', '市容市貌', '违法建设', '小计', '', '统计科目', '工单量 (件)']);
+        headerRow.height = 22;
+        ['A', 'B', 'C', 'D', 'F', 'G'].forEach(col => {
+            const c = ws.getCell(`${col}3`);
+            c.font      = { bold: true, size: 11, color: { argb: COLOR_TITLE_BG }, name: '微软雅黑' };
+            c.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_HEADER_BG } };
+            c.alignment = { vertical: 'middle', horizontal: 'center' };
+            c.border    = borderStyle;
+        });
+
+        // ====== 行4+: 数据行 ======
+        const maxLen = Math.max(squadRows.length, generalRows.length);
         for (let i = 0; i < maxLen; i++) {
-            const sq = squadRows[i];
+            const sq  = squadRows[i];
             const gen = generalRows[i];
-            const excelRow = dataStart + i;
-            aoa.push([
-                '',
-                sq ? sq.name : '',
-                sq ? sq.urban : '',
-                sq ? sq.illegal : '',
-                sq ? { f: 'SUM(C' + excelRow + ':D' + excelRow + ')' } : '',
+            const isAlt = (i % 2 === 1);
+            const rowBg = isAlt ? COLOR_ROW_ALT : COLOR_WHITE;
+
+            const dataRow = ws.addRow([
+                sq  ? sq.name  : '',
+                sq  ? sq.urban : '',
+                sq  ? sq.illegal : '',
+                sq  ? (sq.urban + sq.illegal) : '',
                 '',
                 gen ? gen.name : '',
-                gen ? gen.val : ''
+                gen ? gen.val  : ''
             ]);
+            dataRow.height = 20;
+
+            // 大队明细格
+            ['A', 'B', 'C', 'D'].forEach(col => {
+                const c = ws.getCell(`${col}${dataRow.number}`);
+                c.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+                c.alignment = { vertical: 'middle', horizontal: col === 'A' ? 'left' : 'center' };
+                c.border    = borderStyle;
+                c.font      = { size: 10, name: '微软雅黑', color: { argb: COLOR_TEXT_DARK } };
+                if (['B', 'C', 'D'].includes(col) && sq) {
+                    c.numFmt = '#,##0';
+                }
+            });
+
+            // 汇总格
+            ['F', 'G'].forEach(col => {
+                const c = ws.getCell(`${col}${dataRow.number}`);
+                c.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+                c.alignment = { vertical: 'middle', horizontal: col === 'F' ? 'left' : 'center' };
+                c.border    = borderStyle;
+                c.font      = { size: 10, name: '微软雅黑', color: { argb: COLOR_TEXT_DARK } };
+                if (col === 'G' && gen) c.numFmt = '#,##0';
+            });
         }
 
-        const lastDataRow = dataStart + maxLen - 1;
-        aoa.push([
-            '',
-            '汇算求和',
-            { f: 'SUM(C' + dataStart + ':C' + lastDataRow + ')' },
-            { f: 'SUM(D' + dataStart + ':D' + lastDataRow + ')' },
-            { f: 'SUM(E' + dataStart + ':E' + lastDataRow + ')' },
-            '',
-            '工单汇总',
-            { f: 'SUM(H' + dataStart + ':H' + lastDataRow + ')' }
+        // ====== 汇总行 ======
+        const urbanTotal   = squadRows.reduce((s, r) => s + r.urban,   0);
+        const illegalTotal = squadRows.reduce((s, r) => s + r.illegal, 0);
+        const genTotal     = generalRows.reduce((s, r) => s + r.val,   0);
+
+        const totalRow = ws.addRow([
+            '合计 / 汇算求和', urbanTotal, illegalTotal, urbanTotal + illegalTotal,
+            '', '工单总计', genTotal
         ]);
+        totalRow.height = 22;
 
-        const ws = XLSX.utils.aoa_to_sheet(aoa);
-
-        ws['!cols'] = [
-            { wch: 3 }, { wch: 16 }, { wch: 14 }, { wch: 14 },
-            { wch: 10 }, { wch: 4 }, { wch: 30 }, { wch: 16 },
-        ];
-        ws['!rows'] = [{ hpt: 18 }, { hpt: 24 }, { hpt: 24 }];
-        for (let i = 0; i < maxLen; i++) ws['!rows'].push({ hpt: 20 });
-        ws['!rows'].push({ hpt: 20 });
-        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }];
-
-        const thinBorder = (color) => ({
-            top:    { style: 'thin', color: { rgb: color } },
-            bottom: { style: 'thin', color: { rgb: color } },
-            left:   { style: 'thin', color: { rgb: color } },
-            right:  { style: 'thin', color: { rgb: color } }
+        ['A', 'B', 'C', 'D', 'F', 'G'].forEach(col => {
+            const c = ws.getCell(`${col}${totalRow.number}`);
+            c.font      = { bold: true, size: 11, name: '微软雅黑', color: { argb: COLOR_TITLE_BG } };
+            c.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_TOTAL_BG } };
+            c.alignment = { vertical: 'middle', horizontal: col === 'A' || col === 'F' ? 'left' : 'center' };
+            c.border    = {
+                top:    { style: 'medium', color: { argb: '1F497D' } },
+                left:   { style: 'thin',   color: { argb: COLOR_BORDER } },
+                bottom: { style: 'medium', color: { argb: '1F497D' } },
+                right:  { style: 'thin',   color: { argb: COLOR_BORDER } },
+            };
+            if (['B', 'C', 'D', 'G'].includes(col)) c.numFmt = '#,##0';
         });
-        const S_TITLE    = { font: { bold: true, sz: 13, color: { rgb: '1E293B' } }, alignment: { horizontal: 'center', vertical: 'center' } };
-        const S_SECTION  = { font: { bold: true, sz: 12, color: { rgb: '1E293B' } }, alignment: { vertical: 'center' } };
-        const S_HEAD1    = { font: { bold: true, sz: 10, color: { rgb: 'FFFFFF' } }, fill: { patternType: 'solid', fgColor: { rgb: '1E293B' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: thinBorder('CBD5E1') };
-        const S_HEAD2    = { font: { bold: true, sz: 10, color: { rgb: 'FFFFFF' } }, fill: { patternType: 'solid', fgColor: { rgb: '0F172A' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: thinBorder('CBD5E1') };
-        const S_SUM      = { font: { bold: true, sz: 10, color: { rgb: '0F172A' } }, fill: { patternType: 'solid', fgColor: { rgb: 'E0F2FE' } }, border: thinBorder('CBD5E1') };
-        const S_GEN_SUM  = { font: { bold: true, sz: 10, color: { rgb: '0F172A' } }, fill: { patternType: 'solid', fgColor: { rgb: 'F1F5F9' } }, border: thinBorder('CBD5E1') };
-        function makeDataStyle(isEven, isRight) {
-            const s = { font: { sz: 10, color: { rgb: '334155' } }, alignment: { horizontal: isRight ? 'right' : 'left', vertical: 'center' }, border: thinBorder('E2E8F0') };
-            if (isEven) s.fill = { patternType: 'solid', fgColor: { rgb: 'F8FAFC' } };
-            return s;
-        }
-        function setStyle(r, c, style) {
-            const addr = XLSX.utils.encode_cell({ r, c });
-            if (!ws[addr]) ws[addr] = { t: 'z', v: '' };
-            ws[addr].s = style;
-        }
 
-        setStyle(0, 0, S_TITLE);
-        setStyle(1, 1, S_SECTION); setStyle(1, 6, S_SECTION);
-        [1, 2, 3, 4].forEach(c => setStyle(2, c, S_HEAD1));
-        [6, 7].forEach(c => setStyle(2, c, S_HEAD2));
-
-        for (let i = 0; i < maxLen; i++) {
-            const r = 3 + i, even = i % 2 === 1;
-            setStyle(r, 1, makeDataStyle(even, false));
-            setStyle(r, 2, makeDataStyle(even, true));
-            setStyle(r, 3, makeDataStyle(even, true));
-            setStyle(r, 4, makeDataStyle(even, true));
-            setStyle(r, 6, makeDataStyle(even, false));
-            setStyle(r, 7, makeDataStyle(even, true));
-        }
-
-        const lr = 3 + maxLen;
-        setStyle(lr, 1, Object.assign({}, S_SUM,     { alignment: { horizontal: 'left',  vertical: 'center' } }));
-        setStyle(lr, 2, Object.assign({}, S_SUM,     { alignment: { horizontal: 'right', vertical: 'center' } }));
-        setStyle(lr, 3, Object.assign({}, S_SUM,     { alignment: { horizontal: 'right', vertical: 'center' } }));
-        setStyle(lr, 4, Object.assign({}, S_SUM,     { alignment: { horizontal: 'right', vertical: 'center' } }));
-        setStyle(lr, 6, Object.assign({}, S_GEN_SUM, { alignment: { horizontal: 'left',  vertical: 'center' } }));
-        setStyle(lr, 7, Object.assign({}, S_GEN_SUM, { alignment: { horizontal: 'right', vertical: 'center' } }));
-
-        XLSX.utils.book_append_sheet(wb, ws, '业务统计汇总');
-        XLSX.writeFile(wb, `${year}年${month}月城管业务统计汇总表.xlsx`);
+        // ====== 导出下载 ======
+        const buffer = await wb.xlsx.writeBuffer();
+        const blob   = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url    = URL.createObjectURL(blob);
+        const link   = document.createElement('a');
+        link.href     = url;
+        link.download = `${year}年${month}月城管业务统计汇总表.xlsx`;
+        link.className = 'hidden-exporter';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
 
         btn.innerHTML = '✅ 导出成功';
         setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 2000);
@@ -1329,3 +1648,4 @@ async function exportMonthlyReport() {
         btn.disabled = false;
     }
 }
+

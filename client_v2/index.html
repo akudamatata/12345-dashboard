@@ -9,6 +9,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="./style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 </head>
 
 <body>
@@ -67,8 +68,9 @@
                 </div>
                 <div class="monitor-action">
                     <button id="btn-fullscreen" class="btn btn-tactical">
-                        <span class="btn-icon">⌘</span>
-                        <span class="btn-text">全屏指挥模式</span>
+                        <span class="btn-icon">🌌</span>
+                        <span class="btn-text">全屏指挥舱模式</span>
+                        <div class="btn-glare"></div>
                     </button>
                 </div>
                 <div class="mon-footer">
@@ -83,7 +85,8 @@
             <div class="user-widget">
                 <div class="user-avatar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="filter: drop-shadow(0 0 5px rgba(0, 243, 255, 0.5));">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                         <circle cx="12" cy="7" r="4"></circle>
                     </svg>
@@ -114,11 +117,13 @@
                     </header>
 
                     <div id="dashboard-alert-container"
-                        style="display: none; margin-bottom: 1rem; overflow: hidden; border-radius: 8px; background: rgba(255, 69, 58, 0.1); border: 1px solid rgba(255, 69, 58, 0.3); padding: 0.8rem 1.5rem; position: relative;">
-                        <div style="display: flex; align-items: center; gap: 10px; color: #ff453a; font-weight: 600;">
-                            <span style="white-space: nowrap;">系统提示：</span>
+                        style="display: none; margin-bottom: 1rem; overflow: hidden; border-radius: 8px; background: rgba(255, 0, 122, 0.1); border: 1px solid rgba(255, 0, 122, 0.3); padding: 0.8rem 1.5rem; position: relative;"
+                        class="glow-pink">
+                        <div style="display: flex; align-items: center; gap: 10px; color: #ff007a; font-weight: 700;">
+                            <span class="sys-pulse" style="white-space: nowrap;">🚨 感知系统高优预警：</span>
                             <div style="flex: 1; overflow: hidden; white-space: nowrap;">
-                                <div id="dashboard-alert-text">状态正常。</div>
+                                <marquee id="dashboard-alert-text" scrollamount="5" scrolldelay="50"
+                                    style="vertical-align: middle;">监控正常，无异动指标触发。</marquee>
                             </div>
                         </div>
                     </div>
@@ -127,13 +132,13 @@
                             style="flex: 2; min-width: 320px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: 1.2rem 2rem; position: relative;">
                             <div style="z-index: 2;">
                                 <div
-                                    style="font-size: 0.85rem; color: #9e9ea7; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 8px;">
+                                    style="font-size: 0.85rem; color: #8c8cab; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 6px;">
                                     <span
-                                        style="background: #0a84ff; color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 800; font-size: 0.7rem;">核心指标</span>
-                                    <span><span class="title-year" style="color: #64d2ff; font-weight: 700;">2026</span> 年度系统累计工单</span>
+                                        style="background: var(--primary-color); color: #000; padding: 1px 5px; border-radius: 3px; font-weight: 800; font-size: 0.7rem;">核心指标</span>
+                                    <span class="title-year text-gradient">2026</span>年度系统累计工单
                                 </div>
                                 <div class="value counter" id="stat-main-total"
-                                    style="font-size: 4rem; font-weight: 900; line-height: 1; background: linear-gradient(135deg, #64d2ff, #0a84ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 4px 15px rgba(10, 132, 255, 0.4));">
+                                    style="font-size: 3.5rem; font-weight: 900; line-height: 1; text-shadow: 0 0 20px rgba(0, 243, 255, 0.3); background: linear-gradient(135deg, #ffffff, #00f3ff); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
                                     0</div>
                             </div>
                             <div
@@ -201,12 +206,12 @@
                                 <div class="value counter text-pink" id="stat-approval-total">0</div>
                             </div>
                         </div>
-                        <div class="stat-card glass-panel" style="flex: 1; min-width: 140px;">
+                        <div class="stat-card glass-panel glow-blue" style="flex: 1; min-width: 140px;">
                             <div class="stat-icon">💼</div>
                             <div class="stat-content">
                                 <div class="label">人事财务股 · <span class="title-year">2026</span>年度</div>
                                 <div class="value counter"
-                                    style="color: #0a84ff;"
+                                    style="color: #3b82f6; text-shadow: 0 0 10px rgba(59,130,246,0.4);"
                                     id="stat-hrfin-total">0</div>
                             </div>
                         </div>
@@ -290,11 +295,11 @@
                         </div>
                     </div>
                     <div class="search-actions">
-                        <button id="query-search-btn" class="btn btn-primary">执行查询</button>
+                        <button id="query-search-btn" class="btn btn-primary glow-btn">执行查询检索</button>
                         <button id="query-reset-btn" class="btn btn-outline">重置条件</button>
                         <button id="query-export-btn" class="btn btn-outline"
-                            style="color:var(--success-color); border-color:rgba(50,215,75,0.3); margin-left: auto;">
-                            导出报表</button>
+                            style="color:var(--success-color); border-color:var(--success-color); margin-left: auto;">📊
+                            导出 Excel 统计报表</button>
                     </div>
                 </div>
 
@@ -354,7 +359,7 @@
                         </div>
                     </div>
                     <div class="search-actions">
-                        <button id="comp-search-btn" class="btn btn-purple">生成对比图表</button>
+                        <button id="comp-search-btn" class="btn btn-purple glow-btn">生成对比图表</button>
                         <button id="comp-reset-btn" class="btn btn-outline">重置条件</button>
                     </div>
                 </div>
@@ -494,16 +499,46 @@
                         </div>
                     </div>
 
-                    <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
-                        <button id="save-btn" class="btn btn-primary"
+                    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 1rem; margin-top: 1.5rem;">
+                        <button id="export-month-btn" class="btn glow-btn"
+                            style="padding: 1rem 2rem; font-size: 1.1rem; border-radius: 8px; background: linear-gradient(135deg, #059669, #10b981); border: 1px solid rgba(16,185,129,0.4); color: #fff; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 0 20px rgba(16,185,129,0.25); transition: all 0.3s ease;">
+                            <span>📊</span> 导出当月表格
+                        </button>
+                        <button id="save-btn" class="btn btn-primary glow-btn"
                             style="padding: 1rem 2rem; font-size: 1.1rem; border-radius: 8px;">
-                            同步固化并封存数据
+                            <span style="margin-right: 8px;">💾</span> 同步固化并封存数据
                         </button>
                     </div>
                 </div>
             </section>
         </main>
     </div>
+
+    <!-- 导出模式选择弹窗 -->
+    <div id="query-export-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><span>📊</span> 选择 Excel 报表导出样式</h3>
+                <button id="modal-close-btn" class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-secondary); margin-bottom: 0.8rem; font-size: 0.9rem;">请根据您的统计汇报需要选择表格排列形式：</p>
+                <div class="export-mode-options">
+                    <div id="export-mode-breakdown" class="export-option-card">
+                        <div class="option-icon">📅</div>
+                        <div class="option-title">月度明细表 (单月分列)</div>
+                        <div class="option-desc">选定月份从左到右逐月单列平铺展示，右侧附各单位汇总共计</div>
+                    </div>
+                    <div id="export-mode-summary" class="export-option-card">
+                        <div class="option-icon">📈</div>
+                        <div class="option-title">区间总和表 (仅总和)</div>
+                        <div class="option-desc">将选定月份区间的数据合并为一组累计工单量，适合总量快速汇总</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="./main.js"></script>
 </body>
 

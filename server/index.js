@@ -273,16 +273,22 @@ app.get('/api/advanced-query', (req, res) => {
     const monthFilter = monthList.length > 0 ? `AND month IN (${monthList.map(() => '?').join(',')})` : '';
     const catFilter = categoryList.length > 0 ? `AND category_id IN (${categoryList.map(() => '?').join(',')})` : '';
     
-    // 1. From records (General categories + Totals for Urban/Illegal)
-    // If squadIds is specified, we skip Urban/Illegal from 'records' to avoid duplication with squad query
-    const skipAggregated = squadList.length > 0 ? "AND category_id NOT IN (SELECT id FROM categories WHERE name IN ('市容市貌', '违法建设'))" : "";
-    
+    // 1. From records (General categories + Totals for Urban/Illegal calculated from squad_records)
     if (categoryList.length > 0 || squadList.length === 0) {
         let recQuery = `
-            SELECT year, month, c.name as subject, workload, 'category' as type
+            SELECT r.year, r.month, c.name as subject, 
+                CASE 
+                    WHEN c.name IN ('市容市貌', '违法建设') THEN (
+                        SELECT COALESCE(SUM(sr.workload), 0)
+                        FROM squad_records sr 
+                        WHERE sr.category_id = c.id AND sr.year = r.year AND sr.month = r.month
+                    )
+                    ELSE r.workload 
+                END as workload, 
+                'category' as type
             FROM records r
             JOIN categories c ON r.category_id = c.id
-            WHERE 1=1 ${yearFilter} ${monthFilter} ${catFilter} ${skipAggregated}
+            WHERE 1=1 ${yearFilter} ${monthFilter} ${catFilter}
         `;
         queries.push(recQuery);
         params.push(...yearList, ...monthList, ...categoryList);

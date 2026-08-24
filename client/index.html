@@ -298,8 +298,8 @@
                         <button id="query-search-btn" class="btn btn-primary glow-btn">执行查询检索</button>
                         <button id="query-reset-btn" class="btn btn-outline">重置条件</button>
                         <button id="query-export-btn" class="btn btn-outline"
-                            style="color:var(--success-color); border-color:var(--success-color); margin-left: auto;">⬇️
-                            导出为 CSV 报表</button>
+                            style="color:var(--success-color); border-color:var(--success-color); margin-left: auto;">📊
+                            导出 Excel 统计报表</button>
                     </div>
                 </div>
 
@@ -513,6 +513,32 @@
             </section>
         </main>
     </div>
+
+    <!-- 导出模式选择弹窗 -->
+    <div id="query-export-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><span>📊</span> 选择 Excel 报表导出样式</h3>
+                <button id="modal-close-btn" class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-secondary); margin-bottom: 0.8rem; font-size: 0.9rem;">请根据您的统计汇报需要选择表格排列形式：</p>
+                <div class="export-mode-options">
+                    <div id="export-mode-breakdown" class="export-option-card">
+                        <div class="option-icon">📅</div>
+                        <div class="option-title">月度明细表 (单月分列)</div>
+                        <div class="option-desc">选定月份从左到右逐月单列平铺展示，右侧附各单位汇总共计</div>
+                    </div>
+                    <div id="export-mode-summary" class="export-option-card">
+                        <div class="option-icon">📈</div>
+                        <div class="option-title">区间总和表 (仅总和)</div>
+                        <div class="option-desc">将选定月份区间的数据合并为一组累计工单量，适合总量快速汇总</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="./main.js"></script>
 </body>
 
