@@ -286,7 +286,7 @@ app.get('/advanced-query', async (c) => {
 
         if (cleanCats || queryAll) {
             queries.push(`
-                SELECT r.year, r.month, c.name as subject, 
+                SELECT r.year, r.month, c.name as subject, '' as category_name,
                     CASE 
                         WHEN c.name IN ('市容市貌', '违法建设') THEN (
                             SELECT COALESCE(SUM(sr.workload), 0)
@@ -305,11 +305,11 @@ app.get('/advanced-query', async (c) => {
         if (cleanSquads || queryAll) {
             const squadFilterSR = cleanSquads ? `AND sr.squad_id IN (${cleanSquads})` : '';
             queries.push(`
-                SELECT sr.year, sr.month, s.name as subject, SUM(sr.workload) as workload, 'squad' as type
+                SELECT sr.year, sr.month, s.name as subject, c.name as category_name, sr.workload, 'squad' as type
                 FROM squad_records sr
                 JOIN squads s ON sr.squad_id = s.id
+                JOIN categories c ON sr.category_id = c.id
                 WHERE 1=1 ${yearFilterSR} ${monthFilterSR} ${squadFilterSR}
-                GROUP BY sr.year, sr.month, s.name, s.id
             `);
         }
 

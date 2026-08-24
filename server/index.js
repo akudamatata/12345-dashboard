@@ -287,7 +287,7 @@ app.get('/api/advanced-query', (req, res) => {
     // 1. From records (General categories + Totals for Urban/Illegal calculated from squad_records)
     if (categoryList.length > 0 || queryAll) {
         let recQuery = `
-            SELECT r.year, r.month, c.name as subject, 
+            SELECT r.year, r.month, c.name as subject, '' as category_name,
                 CASE 
                     WHEN c.name IN ('市容市貌', '违法建设') THEN (
                         SELECT COALESCE(SUM(sr.workload), 0)
@@ -308,11 +308,11 @@ app.get('/api/advanced-query', (req, res) => {
     // 2. From squad_records (Specific Squads)
     if (squadList.length > 0 || queryAll) {
         let squadQuery = `
-            SELECT sr.year, sr.month, s.name as subject, SUM(sr.workload) as workload, 'squad' as type
+            SELECT sr.year, sr.month, s.name as subject, c.name as category_name, sr.workload, 'squad' as type
             FROM squad_records sr
             JOIN squads s ON sr.squad_id = s.id
+            JOIN categories c ON sr.category_id = c.id
             WHERE 1=1 ${yearFilterSR} ${monthFilterSR} ${squadFilterSR}
-            GROUP BY sr.year, sr.month, s.name, s.id
         `;
         queries.push(squadQuery);
         params.push(...yearList, ...monthList, ...squadList);

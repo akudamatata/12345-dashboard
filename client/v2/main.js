@@ -671,12 +671,21 @@ async function executeQueryAction() {
             });
 
             const subjects = {};
-            let totalRecords = 0;
+            const squadDetailMap = {};
+            const generalCategoryMap = {};
+
             data.forEach(d => {
-                totalRecords += d.workload || 0;
-                if (!subjects[d.subject]) subjects[d.subject] = { type: d.type, workloads: {} };
                 const key = `${d.year}年度 / ${d.month}月`;
+                if (!subjects[d.subject]) subjects[d.subject] = { type: d.type, workloads: {} };
                 subjects[d.subject].workloads[key] = (subjects[d.subject].workloads[key] || 0) + (d.workload || 0);
+
+                if (d.type === 'squad') {
+                    if (!squadDetailMap[d.subject]) squadDetailMap[d.subject] = { name: d.subject, urban: 0, illegal: 0 };
+                    if (d.category_name === '市容市貌') squadDetailMap[d.subject].urban += (d.workload || 0);
+                    else if (d.category_name === '违法建设') squadDetailMap[d.subject].illegal += (d.workload || 0);
+                } else if (d.type === 'category') {
+                    generalCategoryMap[d.subject] = (generalCategoryMap[d.subject] || 0) + (d.workload || 0);
+                }
             });
 
             thead.innerHTML = `
@@ -759,6 +768,8 @@ async function executeQueryAction() {
             currentQueryDataCache = {
                 timeNodes,
                 subjectEntries,
+                squadDetailMap,
+                generalCategoryMap,
                 hasSquads,
                 columnTotals,
                 grandTotal,
@@ -1330,101 +1341,140 @@ async function exportQueryToExcel(mode = 'breakdown') {
             }
 
         } else {
-            // ================= 模式 2：区间总和表 (仅一组合并总和数据) =================
-            const ws = wb.addWorksheet('区间业务总量汇总表', {
-                pageSetup: { orientation: 'portrait', fitToPage: true }
+            // ================= 模式 2：区间汇总表 (与数据录入导出 100% 完全一模一样格式和样式) =================
+            const ws = wb.addWorksheet('业务统计汇总', {
+                pageSetup: { orientation: 'landscape', fitToPage: true }
             });
 
+            // ---- 列宽 (与数据录入导出完全一致) ----
             ws.columns = [
-                { width: 22 }, // A 统计对象
-                { width: 14 }, // B 部门类别
-                { width: 24 }, // C 区间工单总量 (件)
-                { width: 18 }  // D 业务占比
+                { width: 18 },   // A 大队建制
+                { width: 14 },   // B 市容市貌
+                { width: 14 },   // C 违法建设
+                { width: 12 },   // D 小计
+                { width: 4  },   // E 分隔列
+                { width: 32 },   // F 统计科目
+                { width: 16 },   // G 工单量 (件)
             ];
-            const totalCols = 4;
 
-            // 行1: 大标题
-            const titleRow = ws.addRow([`${timeRangeText} 城管业务统计检索区间汇总表`, '', '', '']);
-            ws.mergeCells('A1:D1');
+            // ====== 行1: 大标题 ======
+            const titleRow = ws.addRow([`${timeRangeText} 城管业务统计汇总表`, '', '', '', '', '', '']);
+            ws.mergeCells('A1:G1');
             const titleCell = ws.getCell('A1');
-            titleCell.font      = { bold: true, size: 15, color: { argb: COLOR_WHITE }, name: '微软雅黑' };
+            titleCell.font      = { bold: true, size: 16, color: { argb: COLOR_WHITE }, name: '微软雅黑' };
             titleCell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_TITLE_BG } };
             titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
             titleRow.height = 36;
 
-            // 行2: 检索元数据
-            const metaRow = ws.addRow([`检索区间: ${timeRangeText}    |    导出时间: ${new Date().toLocaleString('zh-CN')}    |    区间合并总量`, '', '', '']);
+            // ====== 行2: 区块子标题 ======
+            const subRow = ws.addRow(['一、大队接件数明细 (市容 / 违建)', '', '', '', '', '二、全局业务宏观汇总', '']);
             ws.mergeCells('A2:D2');
-            const metaCell = ws.getCell('A2');
-            metaCell.font      = { size: 9.5, color: { argb: '595959' }, name: '微软雅黑', italic: true };
-            metaCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
-            metaRow.height = 20;
+            ws.mergeCells('F2:G2');
+            ['A2', 'F2'].forEach(addr => {
+                const c = ws.getCell(addr);
+                c.font      = { bold: true, size: 11, color: { argb: COLOR_TITLE_BG }, name: '微软雅黑' };
+                c.alignment = { vertical: 'middle', horizontal: 'left' };
+            });
+            subRow.height = 24;
 
-            // 行3: 表头
-            const headerRow = ws.addRow(['统计对象', '类型', `区间工单总量 (件)`, '工单占比']);
-            headerRow.height = 24;
-            for (let c = 1; c <= totalCols; c++) {
-                const cell = headerRow.getCell(c);
-                cell.font      = { bold: true, size: 11, color: { argb: COLOR_TITLE_BG }, name: '微软雅黑' };
-                cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_HEADER_BG } };
-                cell.alignment = { vertical: 'middle', horizontal: 'center' };
-                cell.border    = borderStyle;
-            }
+            // ====== 行3: 表头 ======
+            const headerRow = ws.addRow(['大队建制', '市容市貌', '违法建设', '小计', '', '统计科目', '工单量 (件)']);
+            headerRow.height = 22;
+            ['A', 'B', 'C', 'D', 'F', 'G'].forEach(col => {
+                const c = ws.getCell(`${col}3`);
+                c.font      = { bold: true, size: 11, color: { argb: COLOR_TITLE_BG }, name: '微软雅黑' };
+                c.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_HEADER_BG } };
+                c.alignment = { vertical: 'middle', horizontal: 'center' };
+                c.border    = borderStyle;
+            });
 
-            // 行4+: 数据行
-            subjectEntries.forEach(([subject, info, total], idx) => {
-                const isAlt = (idx % 2 === 1);
-                const rowBg = isAlt ? COLOR_ROW_ALT : COLOR_WHITE;
-                const ratio = grandTotal > 0 ? (total / grandTotal) : 0;
-
-                const dRow = ws.addRow([
-                    subject,
-                    info.type === 'squad' ? '直属大队' : '业务类',
-                    total,
-                    ratio
-                ]);
-                dRow.height = 20;
-
-                for (let c = 1; c <= totalCols; c++) {
-                    const cell = dRow.getCell(c);
-                    cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
-                    cell.border = borderStyle;
-                    cell.font   = { size: 10, name: '微软雅黑', color: { argb: COLOR_TEXT_DARK } };
-
-                    if (c === 1) {
-                        cell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
-                        cell.font      = { bold: true, size: 10, name: '微软雅黑' };
-                    } else if (c === 2) {
-                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
-                        cell.font      = { size: 9.5, name: '微软雅黑', color: { argb: info.type === 'squad' ? '1F497D' : '048A81' } };
-                    } else if (c === 3) {
-                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
-                        cell.numFmt    = '#,##0';
-                        cell.font      = { bold: true, size: 10.5, name: '微软雅黑', color: { argb: COLOR_TITLE_BG } };
-                    } else if (c === 4) {
-                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
-                        cell.numFmt    = '0.0%';
-                    }
+            // ====== 行4+: 数据行 ======
+            // 大队明细行
+            const squadRows = Object.values(currentQueryDataCache.squadDetailMap || {});
+            
+            // 业务汇总行按标准规范顺序
+            const standardCatOrder = ['市容市貌', '违法建设', '市政设施', '环境卫生', '三大队（施工噪音扬尘渣土）', '三大队', '二大队', '园林绿化', '人事财务股', '审批中心'];
+            const generalRows = [];
+            const genMap = currentQueryDataCache.generalCategoryMap || {};
+            const matchedCats = new Set();
+            standardCatOrder.forEach(name => {
+                const matchedKey = Object.keys(genMap).find(k => k === name || k.includes(name) || name.includes(k));
+                if (matchedKey && !matchedCats.has(matchedKey)) {
+                    matchedCats.add(matchedKey);
+                    generalRows.push({ name: matchedKey, val: genMap[matchedKey] });
+                }
+            });
+            Object.keys(genMap).forEach(k => {
+                if (!matchedCats.has(k)) {
+                    generalRows.push({ name: k, val: genMap[k] });
                 }
             });
 
-            // 汇总合计行
-            const fRow = ws.addRow(['汇总合计', '全局总计', grandTotal, 1.0]);
-            fRow.height = 24;
-            for (let c = 1; c <= totalCols; c++) {
-                const cell = fRow.getCell(c);
-                cell.font      = { bold: true, size: 11, name: '微软雅黑', color: { argb: COLOR_TITLE_BG } };
-                cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_TOTAL_BG } };
-                cell.alignment = { vertical: 'middle', horizontal: 'center' };
-                cell.border    = {
-                    top:    { style: 'medium', color: { argb: COLOR_TITLE_BG } },
+            const maxLen = Math.max(squadRows.length, generalRows.length);
+            for (let i = 0; i < maxLen; i++) {
+                const sq  = squadRows[i];
+                const gen = generalRows[i];
+                const isAlt = (i % 2 === 1);
+                const rowBg = isAlt ? COLOR_ROW_ALT : COLOR_WHITE;
+
+                const dataRow = ws.addRow([
+                    sq  ? sq.name  : '',
+                    sq  ? sq.urban : '',
+                    sq  ? sq.illegal : '',
+                    sq  ? (sq.urban + sq.illegal) : '',
+                    '',
+                    gen ? gen.name : '',
+                    gen ? gen.val  : ''
+                ]);
+                dataRow.height = 20;
+
+                // 大队明细格
+                ['A', 'B', 'C', 'D'].forEach(col => {
+                    const c = ws.getCell(`${col}${dataRow.number}`);
+                    c.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+                    c.alignment = { vertical: 'middle', horizontal: col === 'A' ? 'left' : 'center' };
+                    c.border    = borderStyle;
+                    c.font      = { size: 10, name: '微软雅黑', color: { argb: COLOR_TEXT_DARK } };
+                    if (['B', 'C', 'D'].includes(col) && sq) {
+                        c.numFmt = '#,##0';
+                    }
+                });
+
+                // 汇总格
+                ['F', 'G'].forEach(col => {
+                    const c = ws.getCell(`${col}${dataRow.number}`);
+                    c.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+                    c.alignment = { vertical: 'middle', horizontal: col === 'F' ? 'left' : 'center' };
+                    c.border    = borderStyle;
+                    c.font      = { size: 10, name: '微软雅黑', color: { argb: COLOR_TEXT_DARK } };
+                    if (col === 'G' && gen) c.numFmt = '#,##0';
+                });
+            }
+
+            // ====== 汇总行 ======
+            const urbanTotal   = squadRows.reduce((s, r) => s + (r.urban || 0),   0);
+            const illegalTotal = squadRows.reduce((s, r) => s + (r.illegal || 0), 0);
+            const genTotal     = currentQueryDataCache.grandTotal;
+
+            const totalRow = ws.addRow([
+                '合计 / 汇算求和', urbanTotal, illegalTotal, urbanTotal + illegalTotal,
+                '', '工单总计', genTotal
+            ]);
+            totalRow.height = 22;
+
+            ['A', 'B', 'C', 'D', 'F', 'G'].forEach(col => {
+                const c = ws.getCell(`${col}${totalRow.number}`);
+                c.font      = { bold: true, size: 11, name: '微软雅黑', color: { argb: COLOR_TITLE_BG } };
+                c.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_TOTAL_BG } };
+                c.alignment = { vertical: 'middle', horizontal: col === 'A' || col === 'F' ? 'left' : 'center' };
+                c.border    = {
+                    top:    { style: 'medium', color: { argb: '1F497D' } },
                     left:   { style: 'thin',   color: { argb: COLOR_BORDER } },
-                    bottom: { style: 'medium', color: { argb: COLOR_TITLE_BG } },
+                    bottom: { style: 'medium', color: { argb: '1F497D' } },
                     right:  { style: 'thin',   color: { argb: COLOR_BORDER } },
                 };
-                if (c === 3) cell.numFmt = '#,##0';
-                if (c === 4) cell.numFmt = '0.0%';
-            }
+                if (['B', 'C', 'D', 'G'].includes(col)) c.numFmt = '#,##0';
+            });
         }
 
         // ====== 导出并下载文件 ======
