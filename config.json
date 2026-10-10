@@ -1,0 +1,20 @@
+{
+  "keyword": "违建",
+  "mappings": [
+    { "dept": "向阳大队", "person": "孟晶琦" },
+    { "dept": "振兴大队", "person": "许艺凡" },
+    { "dept": "松州大队", "person": "张振泽" },
+    { "dept": "铁东大队", "person": "杨书欣" },
+    { "dept": "兴安大队", "person": "王振威" },
+    { "dept": "玉龙大队", "person": "王端阳" },
+    { "dept": "全宁大队", "person": "王杰文" },
+    { "dept": "松城大队", "person": "李颖" },
+    { "dept": "二大队", "person": "梁宏达" },
+    { "dept": "三大队", "person": "贾春生" },
+    { "dept": "园林中心", "person": "李立" },
+    { "dept": "市政中心", "person": "朱新园" },
+    { "dept": "环卫中心", "person": "宗梓祺" },
+    { "dept": "人事财务股", "person": "成凤枝" },
+    { "dept": "审批中心", "person": "杨欣蕾" }
+  ]
+}

@@ -172,6 +172,7 @@ async function init() {
     }
     if (document.getElementById('save-btn')) document.getElementById('save-btn').addEventListener('click', saveRecords);
     if (document.getElementById('export-month-btn')) document.getElementById('export-month-btn').addEventListener('click', exportMonthlyReport);
+    initSmartExcelImport();
     
     // Query Tools
     if (document.getElementById('query-search-btn')) document.getElementById('query-search-btn').addEventListener('click', executeQueryAction);
@@ -1702,4 +1703,259 @@ async function exportMonthlyReport() {
         btn.disabled = false;
     }
 }
+
+// ==========================================
+// 12345 案件表格智能解析 (一键自动填报) 模块
+// ==========================================
+function initSmartExcelImport() {
+    const dropzone = document.getElementById('smart-import-dropzone');
+    const fileInput = document.getElementById('smart-excel-file-input');
+    const uploadBtn = document.getElementById('smart-excel-upload-btn');
+
+    if (!dropzone || !fileInput || !uploadBtn) return;
+
+    uploadBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            handleSmartExcelParse(e.target.files[0]);
+        }
+    });
+
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = '#00f3ff';
+        dropzone.style.background = 'rgba(0, 243, 255, 0.1)';
+    });
+
+    dropzone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = 'rgba(0, 243, 255, 0.4)';
+        dropzone.style.background = 'rgba(0, 243, 255, 0.03)';
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = 'rgba(0, 243, 255, 0.4)';
+        dropzone.style.background = 'rgba(0, 243, 255, 0.03)';
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleSmartExcelParse(e.dataTransfer.files[0]);
+        }
+    });
+}
+
+const SMART_PERSON_MAP = {
+    '孟晶琦': '向阳大队',
+    '许艺凡': '振兴大队',
+    '张振泽': '松州大队',
+    '杨书欣': '铁东大队',
+    '王振威': '兴安大队',
+    '王端阳': '玉龙大队',
+    '王杰文': '全宁大队',
+    '李颖': '松城大队',
+    '梁宏达': '二大队',
+    '贾春生': '三大队',
+    '李立': '园林中心',
+    '朱新园': '市政中心',
+    '宗梓祺': '环卫中心',
+    '成凤枝': '人事财务股',
+    '杨欣蕾': '审批中心'
+};
+
+async function handleSmartExcelParse(file) {
+    const statusText = document.getElementById('smart-import-status');
+    const uploadBtn = document.getElementById('smart-excel-upload-btn');
+    const originalBtnHtml = uploadBtn.innerHTML;
+
+    if (!file.name.endsWith('.xlsx')) {
+        alert('请选择 .xlsx 格式的 Excel 表格！');
+        return;
+    }
+
+    if (typeof ExcelJS === 'undefined') {
+        alert('ExcelJS 组件未就绪，请刷新页面重试！');
+        return;
+    }
+
+    uploadBtn.innerHTML = '<span>⚡</span> 正在极速解析...';
+    uploadBtn.disabled = true;
+    if (statusText) statusText.innerHTML = `<span style="color:#00f3ff;">正在读取并分析表格: <b>${file.name}</b> ...</span>`;
+
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+        const wb = new ExcelJS.Workbook();
+        await wb.xlsx.load(arrayBuffer);
+        const ws = wb.worksheets[0];
+
+        // 识别表头列序号
+        let colIndex = {};
+        for (let r = 1; r <= Math.min(5, ws.rowCount); r++) {
+            const row = ws.getRow(r);
+            let foundHeaders = 0;
+            row.eachCell((cell, colNum) => {
+                const txt = String(cell.value || cell.text || '').trim();
+                if (txt.includes('审批结果')) { colIndex['审批结果'] = colNum; foundHeaders++; }
+                if (txt.includes('审批状态')) { colIndex['审批状态'] = colNum; foundHeaders++; }
+                if (txt.includes('当前负责人')) { colIndex['当前负责人'] = colNum; foundHeaders++; }
+                if (txt.includes('历史审批人')) { colIndex['历史审批人'] = colNum; foundHeaders++; }
+                if (txt.includes('案件详情')) { colIndex['案件详情'] = colNum; foundHeaders++; }
+                if (txt.includes('审批单标题')) { colIndex['审批单标题'] = colNum; }
+                if (txt.includes('创建人部门')) { colIndex['创建人部门'] = colNum; }
+            });
+            if (foundHeaders >= 3) break;
+        }
+
+        if (!colIndex['审批结果'] || !colIndex['审批状态'] || !colIndex['案件详情']) {
+            throw new Error('未识别到案件表头字段（需包含“审批结果”、“审批状态”、“案件详情”等）');
+        }
+
+        const squadStats = {
+            '向阳大队': { urban: 0, illegal: 0 },
+            '兴安大队': { urban: 0, illegal: 0 },
+            '全宁大队': { urban: 0, illegal: 0 },
+            '振兴大队': { urban: 0, illegal: 0 },
+            '松州大队': { urban: 0, illegal: 0 },
+            '玉龙大队': { urban: 0, illegal: 0 },
+            '铁东大队': { urban: 0, illegal: 0 },
+            '松城大队': { urban: 0, illegal: 0 }
+        };
+
+        const centerStats = {
+            '市政中心': 0,
+            '环卫中心': 0,
+            '三大队': 0,
+            '二大队': 0,
+            '园林中心': 0,
+            '人事财务股': 0,
+            '审批中心': 0
+        };
+
+        let validCount = 0;
+        let passCount = 0;
+        let pendingCount = 0;
+
+        for (let r = 2; r <= ws.rowCount; r++) {
+            const row = ws.getRow(r);
+            const spResult = String(row.getCell(colIndex['审批结果'])?.text || '').trim();
+            const spStatus = String(row.getCell(colIndex['审批状态'])?.text || '').trim();
+
+            const isPassed = (spResult === '审批通过');
+            const isPending = (spStatus === '审批中');
+            if (!isPassed && !isPending) continue;
+
+            validCount++;
+            if (isPassed) passCount++;
+            if (isPending) pendingCount++;
+
+            const curPerson = String(row.getCell(colIndex['当前负责人'])?.text || '').trim();
+            const histPersons = String(row.getCell(colIndex['历史审批人'])?.text || '').trim();
+            const details = String(row.getCell(colIndex['案件详情'])?.text || '').trim();
+
+            // 责任人判定：严格通过工单状态与人员字段
+            const targetPersonStr = isPending ? curPerson : (histPersons || curPerson);
+            let matchedDept = '其他/未匹配';
+
+            for (const [p, d] of Object.entries(SMART_PERSON_MAP)) {
+                if (targetPersonStr.includes(p)) {
+                    matchedDept = d;
+                    break;
+                }
+            }
+
+            const hasIllegal = details.includes('违建');
+
+            if (squadStats[matchedDept]) {
+                if (hasIllegal) {
+                    squadStats[matchedDept].illegal++;
+                } else {
+                    squadStats[matchedDept].urban++;
+                }
+            } else if (centerStats[matchedDept] !== undefined) {
+                centerStats[matchedDept]++;
+            }
+        }
+
+        // 填报左表
+        document.querySelectorAll('#squad-entry-tbody tr').forEach(tr => {
+            const squadName = tr.querySelector('td')?.textContent?.trim();
+            if (squadName && squadStats[squadName]) {
+                const inputs = tr.querySelectorAll('.sq-input');
+                if (inputs.length >= 2) {
+                    inputs[0].value = squadStats[squadName].urban;
+                    inputs[1].value = squadStats[squadName].illegal;
+                    inputs[0].style.transition = 'all 0.3s ease';
+                    inputs[1].style.transition = 'all 0.3s ease';
+                    inputs[0].style.border = '1px solid #00f3ff';
+                    inputs[1].style.border = '1px solid #00f3ff';
+                    inputs[0].style.boxShadow = '0 0 10px rgba(0, 243, 255, 0.4)';
+                    inputs[1].style.boxShadow = '0 0 10px rgba(0, 243, 255, 0.4)';
+                    setTimeout(() => {
+                        inputs[0].style.border = '';
+                        inputs[1].style.border = '';
+                        inputs[0].style.boxShadow = '';
+                        inputs[1].style.boxShadow = '';
+                    }, 3000);
+                }
+                const rowTotalEl = tr.querySelector('.row-total');
+                if (rowTotalEl) {
+                    rowTotalEl.textContent = squadStats[squadName].urban + squadStats[squadName].illegal;
+                }
+            }
+        });
+
+        // 填报右表
+        document.querySelectorAll('#summary-entry-tbody tr').forEach(tr => {
+            const subjectName = tr.querySelector('td')?.textContent?.trim();
+            const input = tr.querySelector('input');
+            if (!input || !subjectName) return;
+
+            let val = null;
+            if (subjectName.includes('市政设施')) val = centerStats['市政中心'];
+            else if (subjectName.includes('环境卫生')) val = centerStats['环卫中心'];
+            else if (subjectName.includes('三大队')) val = centerStats['三大队'];
+            else if (subjectName.includes('二大队')) val = centerStats['二大队'];
+            else if (subjectName.includes('园林绿化')) val = centerStats['园林中心'];
+            else if (subjectName.includes('人事财务股')) val = centerStats['人事财务股'];
+            else if (subjectName.includes('审批中心')) val = centerStats['审批中心'];
+
+            if (val !== null) {
+                input.value = val;
+                input.style.transition = 'all 0.3s ease';
+                input.style.border = '1px solid #00f3ff';
+                input.style.boxShadow = '0 0 10px rgba(0, 243, 255, 0.4)';
+                setTimeout(() => {
+                    input.style.border = '';
+                    input.style.boxShadow = '';
+                }, 3000);
+            }
+        });
+
+        // 自动计算汇总
+        if (typeof updateTally === 'function') {
+            updateTally();
+        }
+
+        if (statusText) {
+            statusText.innerHTML = `
+                <span style="color:#00e676; font-weight:600;">
+                    ✅ 智能填报成功！文件: <b>${file.name}</b> (有效纳管 <b>${validCount}</b> 件: 审批通过 ${passCount} 件, 审批中 ${pendingCount} 件)
+                </span>
+                <span style="color:#a5f3fc; margin-left: 8px;">数据已全部精确回填，请核对后点击右下方【同步固化并封存数据】。</span>
+            `;
+        }
+
+        uploadBtn.innerHTML = '✅ 填报完成';
+        setTimeout(() => {
+            uploadBtn.innerHTML = originalBtnHtml;
+            uploadBtn.disabled = false;
+        }, 3000);
+
+    } catch (err) {
+        console.error('智能解析表格失败:', err);
+        alert('解析表格失败: ' + err.message);
+        if (statusText) statusText.innerHTML = `<span style="color:#ff3b3b;">❌ 解析表格失败: ${err.message}</span>`;
+        uploadBtn.innerHTML = originalBtnHtml;
+        uploadBtn.disabled = false;
+    }
+}
+
 

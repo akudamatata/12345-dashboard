@@ -451,6 +451,30 @@
                 </header>
 
                 <div class="managed-container">
+                    <!-- 智能表格自动填报区 -->
+                    <div id="smart-import-dropzone" class="card glass-panel hover-lift" style="margin-bottom: 1.5rem; padding: 1.25rem 1.5rem; border: 1.5px dashed rgba(0, 243, 255, 0.4); background: rgba(0, 243, 255, 0.03); border-radius: 12px; transition: all 0.3s ease;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 1.2rem;">
+                                <div style="font-size: 2.2rem; filter: drop-shadow(0 0 10px rgba(0,243,255,0.6));">⚡</div>
+                                <div>
+                                    <div style="font-size: 1.1rem; font-weight: 700; color: #00f3ff; display: flex; align-items: center; gap: 8px;">
+                                        12345 案件表格智能解析 (一键自动填报)
+                                        <span style="font-size: 0.75rem; background: rgba(0, 243, 255, 0.2); border: 1px solid rgba(0,243,255,0.4); padding: 2px 8px; border-radius: 10px; color: #fff;">免人工统计</span>
+                                    </div>
+                                    <div id="smart-import-status" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+                                        将导出的 Excel 表格拖放到此处，或点击右侧按钮，系统将自动核算各大队及业务科目并填入下方表格
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                                <input type="file" id="smart-excel-file-input" accept=".xlsx" style="display: none;">
+                                <button type="button" id="smart-excel-upload-btn" class="btn glow-btn" style="background: linear-gradient(135deg, #00f3ff, #00a8ff); color: #000; font-weight: 700; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 0 15px rgba(0,243,255,0.3); transition: all 0.2s;">
+                                    <span>📂</span> 选择表格解析并填入
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="entry-grid-wrapper">
                         <div class="card glass-panel hover-lift entry-left">
                             <h3 class="section-title">1. 大队接件数明细录入 (市容 / 违建)</h3>

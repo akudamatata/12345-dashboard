@@ -1,3 +1,13 @@
 node_modules/
 dist/
 .DS_Store
+
+# 忽略所有表格数据文件
+*.xlsx
+*.xls
+*.csv
+~$*.xlsx
+
+# Python 缓存
+__pycache__/
+*.pyc

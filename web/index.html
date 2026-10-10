@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>12345 工单数据统计分析系统</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success: #059669;
+      --success-hover: #047857;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 24px; min-height: 100vh; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .title h1 { font-size: 24px; font-weight: 700; color: #1e3a8a; }
+    .title p { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
+    .actions { display: flex; gap: 10px; align-items: center; }
+    
+    .btn { padding: 9px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-success:hover { background: var(--success-hover); }
+    .btn-outline { background: #fff; border-color: var(--border); color: #334155; }
+    .btn-outline:hover { background: #f1f5f9; border-color: #cbd5e1; }
+    .btn-danger { background: #ef4444; color: #fff; }
+    .btn-danger:hover { background: #dc2626; }
+
+    /* 拖拽上传条 */
+    .dropzone {
+      background: #eff6ff; border: 2px dashed #93c5fd; border-radius: 8px; padding: 14px; text-align: center;
+      margin-bottom: 20px; color: #1d4ed8; font-size: 14px; cursor: pointer; transition: 0.2s;
+    }
+    .dropzone:hover, .dropzone.dragover { background: #dbeafe; border-color: #3b82f6; }
+
+    /* 概览卡片 */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--card); border-radius: 8px; padding: 16px 20px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+    .stat-card .label { font-size: 13px; color: var(--text-muted); }
+    .stat-card .value { font-size: 28px; font-weight: 700; margin-top: 4px; color: #1e293b; }
+
+    /* 表格区域 */
+    .tables-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .table-card { background: var(--card); border-radius: 8px; border: 1px solid var(--border); padding: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+    .table-card h2 { font-size: 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--primary); padding-left: 10px; }
+    .table-card h2 span { font-size: 12px; font-weight: normal; color: var(--text-muted); }
+
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+    th { background: #f8fafc; padding: 10px 12px; font-weight: 600; color: #475569; border-bottom: 2px solid var(--border); }
+    td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: #334155; }
+    tr:hover td { background: #f8fafc; }
+    tr.total-row { font-weight: 700; background: #f0fdf4 !important; }
+    tr.total-row td { color: #166534; border-top: 2px solid #86efac; border-bottom: none; }
+    .badge { padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; display: inline-block; }
+    .badge-done { background: #dcfce7; color: #15803d; }
+    .badge-undone { background: #fef3c7; color: #b45309; }
+    .badge-kw { background: #fee2e2; color: #b91c1c; }
+
+    /* 设置弹窗 Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-overlay.active { display: flex; }
+    .modal-box { background: #fff; width: 680px; max-width: 95vw; max-height: 85vh; border-radius: 10px; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.15); overflow: hidden; }
+    .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { font-size: 18px; color: #1e293b; }
+    .close-btn { font-size: 20px; cursor: pointer; border: none; background: none; color: #94a3b8; }
+    .close-btn:hover { color: #475569; }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #334155; }
+    .input-text { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; }
+    .input-text:focus { border-color: var(--primary); ring: 2px solid #bfdbfe; }
+    .mapping-table { width: 100%; border: 1px solid var(--border); border-radius: 6px; }
+    .mapping-table th, .mapping-table td { padding: 8px 10px; }
+    .mapping-table input { width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; }
+    .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: #f8fafc; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">
+      <h1>12345 工单数据统计分析系统</h1>
+      <p id="subInfo">数据加载中...</p>
+    </div>
+    <div class="actions">
+      <input type="file" id="fileInput" accept=".xlsx" style="display: none;" onchange="handleFileSelect(event)">
+      <button class="btn btn-outline" onclick="document.getElementById('fileInput').click()">📁 导入新表格</button>
+      <button class="btn btn-outline" onclick="openConfigModal()">⚙️ 规则设置</button>
+      <button class="btn btn-primary" onclick="loadData()">🔄 刷新</button>
+      <a class="btn btn-success" href="/api/export" target="_blank">📥 导出 Excel</a>
+    </div>
+  </div>
+
+  <!-- 拖拽上传区 -->
+  <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+    📂 点击选择或拖放新的 12345 工单 Excel 表格（.xlsx）到此处，即可秒级重新统计
+  </div>
+
+  <!-- 概览卡片 -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="label">纳入有效统计工单</div>
+      <div class="value" id="statTotal">-</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">已办结工单 (审批通过)</div>
+      <div class="value" id="statDone" style="color: #16a34a;">-</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">未办结工单 (审批中)</div>
+      <div class="value" id="statUndone" style="color: #ea580c;">-</div>
+    </div>
+    <div class="stat-card">
+      <div class="label" id="labelKwCount">违建工单总数</div>
+      <div class="value" id="statKw" style="color: #dc2626;">-</div>
+    </div>
+  </div>
+
+  <!-- 统计表格双栏 -->
+  <div class="tables-grid">
+    <div class="table-card">
+      <h2>表一：各部门办结情况统计 <span>(仅统计审批通过与审批中)</span></h2>
+      <table id="table1">
+        <thead>
+          <tr>
+            <th>部门 / 大队</th>
+            <th>已办结 (审批通过)</th>
+            <th>未办结 (审批中)</th>
+            <th>总数</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="table-card">
+      <h2>表二：各部门业务分类统计 <span id="table2SubTitle">(含指定关键字划分)</span></h2>
+      <table id="table2">
+        <thead>
+          <tr>
+            <th>部门 / 大队</th>
+            <th>市容市貌</th>
+            <th id="thKwName">违建</th>
+            <th>总数</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 设置弹窗 -->
+  <div class="modal-overlay" id="configModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>⚙️ 统计规则与部门对应设置</h3>
+        <button class="close-btn" onclick="closeConfigModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>识别分类关键字 (默认“违建”)：</label>
+          <input type="text" id="cfgKeyword" class="input-text" placeholder="例如：违建">
+          <small style="color: var(--text-muted); font-size: 12px; margin-top: 4px; display: block;">
+            案件详情包含该词算作此类，不包含则划入“市容市貌”。
+          </small>
+        </div>
+
+        <div class="form-group">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+            <label style="margin-bottom:0;">部门与对应负责人名单：</label>
+            <button type="button" class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;" onclick="addMappingRow()">+ 添加部门</button>
+          </div>
+          <small style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px; display: block;">
+            审批中看当前负责人，已办结看历史审批人；支持填多个名字用逗号隔开。
+          </small>
+          <table class="mapping-table" id="mappingEditor">
+            <thead>
+              <tr style="background:#f1f5f9;">
+                <th style="width: 35%;">部门 / 大队名称</th>
+                <th>对应人名 (关键字)</th>
+                <th style="width: 60px; text-align: center;">操作</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeConfigModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveConfigData()">💾 保存并重新统计</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentKeyword = '违建';
+
+    // 拖拽与上传
+    const dropzone = document.getElementById('dropzone');
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', () => { dropzone.classList.remove('dragover'); });
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        uploadFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    function handleFileSelect(e) {
+      if (e.target.files && e.target.files[0]) {
+        uploadFile(e.target.files[0]);
+      }
+    }
+
+    async function uploadFile(file) {
+      if (!file.name.endsWith('.xlsx')) {
+        alert('请上传 .xlsx 格式的 Excel 表格！');
+        return;
+      }
+      document.getElementById('subInfo').textContent = `正在上传并分析 ${file.name}...`;
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/octet-stream',
+            'X-Filename': encodeURIComponent(file.name)
+          },
+          body: file
+        });
+        const data = await res.json();
+        if (data.error) {
+          alert(data.error);
+          return;
+        }
+        renderData(data);
+      } catch (err) {
+        alert('上传分析失败: ' + err.message);
+      }
+    }
+
+    async function loadData() {
+      try {
+        const res = await fetch('/api/analyze');
+        const data = await res.json();
+        if (data.error) {
+          document.getElementById('subInfo').textContent = data.error;
+          return;
+        }
+        renderData(data);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function renderData(data) {
+      currentKeyword = data.keyword || '违建';
+      document.getElementById('subInfo').textContent = `当前表格: ${data.filename} ｜ 关键字: 【${currentKeyword}】 ｜ 仅统计审批通过与审批中`;
+      document.getElementById('labelKwCount').textContent = `${currentKeyword}案件总数`;
+      document.getElementById('thKwName').textContent = currentKeyword;
+      document.getElementById('table2SubTitle').textContent = `(以案件详情含“${currentKeyword}”划分)`;
+
+      const totalRow1 = data.table1.find(r => r.部门.includes('合计')) || {};
+      const totalRow2 = data.table2.find(r => r.部门.includes('合计')) || {};
+      
+      document.getElementById('statTotal').textContent = totalRow1['总数'] || 0;
+      document.getElementById('statDone').textContent = totalRow1['已办结'] || 0;
+      document.getElementById('statUndone').textContent = totalRow1['未办结'] || 0;
+      document.getElementById('statKw').textContent = totalRow2[currentKeyword] || 0;
+
+      // 渲染表一
+      const tb1 = document.querySelector('#table1 tbody');
+      tb1.innerHTML = '';
+      data.table1.forEach(row => {
+        const isTotal = row.部门.includes('合计');
+        const tr = document.createElement('tr');
+        if (isTotal) tr.className = 'total-row';
+        tr.innerHTML = `
+          <td><strong>${row.部门}</strong></td>
+          <td><span class="${isTotal ? '' : 'badge badge-done'}">${row.已办结}</span></td>
+          <td><span class="${isTotal ? '' : 'badge badge-undone'}">${row.未办结}</span></td>
+          <td><strong>${row.总数}</strong></td>
+        `;
+        tb1.appendChild(tr);
+      });
+
+      // 渲染表二
+      const tb2 = document.querySelector('#table2 tbody');
+      tb2.innerHTML = '';
+      data.table2.forEach(row => {
+        const isTotal = row.部门.includes('合计');
+        const tr = document.createElement('tr');
+        if (isTotal) tr.className = 'total-row';
+        tr.innerHTML = `
+          <td><strong>${row.部门}</strong></td>
+          <td>${row.市容市貌}</td>
+          <td><span class="${isTotal ? '' : 'badge badge-kw'}">${row[currentKeyword]}</span></td>
+          <td><strong>${row.总数}</strong></td>
+        `;
+        tb2.appendChild(tr);
+      });
+    }
+
+    // 设置弹窗逻辑
+    async function openConfigModal() {
+      const res = await fetch('/api/config');
+      const cfg = await res.json();
+      document.getElementById('cfgKeyword').value = cfg.keyword || '违建';
+      
+      const tbody = document.querySelector('#mappingEditor tbody');
+      tbody.innerHTML = '';
+      (cfg.mappings || []).forEach(m => {
+        addMappingRow(m.dept, m.person);
+      });
+      document.getElementById('configModal').classList.add('active');
+    }
+
+    function closeConfigModal() {
+      document.getElementById('configModal').classList.remove('active');
+    }
+
+    function addMappingRow(dept = '', person = '') {
+      const tbody = document.querySelector('#mappingEditor tbody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="text" class="map-dept" value="${dept}" placeholder="部门名称"></td>
+        <td><input type="text" class="map-person" value="${person}" placeholder="人名关键字"></td>
+        <td style="text-align: center;"><button type="button" class="btn btn-outline" style="padding: 3px 8px; color: #ef4444;" onclick="this.closest('tr').remove()">✕</button></td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    async function saveConfigData() {
+      const kw = document.getElementById('cfgKeyword').value.trim() || '违建';
+      const rows = document.querySelectorAll('#mappingEditor tbody tr');
+      const mappings = [];
+      rows.forEach(tr => {
+        const dept = tr.querySelector('.map-dept').value.trim();
+        const person = tr.querySelector('.map-person').value.trim();
+        if (dept && person) {
+          mappings.push({ dept, person });
+        }
+      });
+
+      const newCfg = { keyword: kw, mappings };
+      const res = await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newCfg)
+      });
+      const data = await res.json();
+      if (data.error) {
+        alert('保存失败: ' + data.error);
+        return;
+      }
+      closeConfigModal();
+      if (data.result) {
+        renderData(data.result);
+      } else {
+        loadData();
+      }
+    }
+
+    // 初次加载
+    loadData();
+  </script>
+</body>
+</html>
