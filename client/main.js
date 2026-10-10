@@ -127,18 +127,16 @@ async function init() {
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.view').forEach(v => {
                 v.classList.remove('active');
-                setTimeout(() => v.style.display = 'none', 50);
+                v.style.display = ''; // 清除内联样式干扰，交由 CSS !important 铁律掌控
             });
             
             targetBtn.classList.add('active');
             const viewId = `view-${targetBtn.dataset.view}`;
             const targetView = document.getElementById(viewId);
-            
-            setTimeout(() => {
+            if (targetView) {
                 targetView.style.display = '';
-                void targetView.offsetWidth; 
                 targetView.classList.add('active');
-            }, 60);
+            }
             
             if (targetBtn.dataset.view === 'dashboard') loadDashboard();
             if (targetBtn.dataset.view === 'manage') loadEntryData();
@@ -404,15 +402,16 @@ async function loadDashboard() {
                     position: 'right',
                     align: 'center',
                     labels: { 
-                        boxWidth: 8, 
-                        boxHeight: 8,
+                        boxWidth: 9, 
+                        boxHeight: 9,
                         usePointStyle: true, 
                         pointStyle: 'circle',
-                        padding: 6, /* 减小间距，确保9个分类在单列内垂直容纳，绝不换列挤出边界 */
-                        color: '#94a3b8',
+                        padding: 7, 
+                        color: '#cbd5e1',
                         font: {
-                            size: 11,
-                            family: "'Inter', 'PingFang SC', sans-serif"
+                            size: 12.5,
+                            family: "'Inter', 'PingFang SC', sans-serif",
+                            weight: '500'
                         }
                     } 
                 },

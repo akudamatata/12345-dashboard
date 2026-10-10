@@ -392,9 +392,9 @@ aside.glass-panel {
 }
 
 /* Views & Animation */
-.view { display: none; opacity: 0; }
+.view { display: none !important; opacity: 0; }
 .view.active { 
-    display: flex; 
+    display: flex !important; 
     flex-direction: column; 
     opacity: 1; 
     min-height: calc(100vh - 5rem); 
@@ -870,9 +870,12 @@ h3.card-title::before {
 
 #view-manage { 
     padding: 0;
+}
+#view-manage.active { 
+    padding: 0;
     flex: 1;
     min-height: calc(100vh - 5rem);
-    display: flex;
+    display: flex !important;
     flex-direction: column;
 }
 #view-manage .page-header { 
