@@ -769,15 +769,14 @@ h3.card-title::before {
 }
 
 #view-manage { 
-    padding: 1.8rem 3.5rem 1.2rem 3.5rem; 
-    height: 100vh;
-    box-sizing: border-box;
+    padding: 0;
+    flex: 1;
+    min-height: calc(100vh - 5rem);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
 }
 #view-manage .page-header { 
-    margin-bottom: 0.8rem; 
+    margin-bottom: 1rem; 
     flex: 0 0 auto;
 }
 /* 标题 h1 与副标题 subtitle 恢复继承全局 2.2rem 规范，保持全站完全一致 */
