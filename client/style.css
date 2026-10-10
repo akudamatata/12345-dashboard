@@ -768,12 +768,53 @@ h3.card-title::before {
     box-shadow: 0 0 10px var(--primary-color);
 }
 
-#view-manage { padding-top: 1rem; }
-#view-manage .page-header { margin-bottom: 0.4rem; }
-#view-manage h1 { font-size: 1.35rem; }
-#view-manage .subtitle { display: none; }
-.managed-container { flex: 1; display: flex; flex-direction: column; gap: 0.6rem; }
-#view-manage .card { padding: 0.6rem 0.9rem; margin-bottom: 0; flex: 1; }
+#view-manage { 
+    padding: 1.8rem 3.5rem 1.2rem 3.5rem; 
+    height: 100vh;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+#view-manage .page-header { 
+    margin-bottom: 0.8rem; 
+    flex: 0 0 auto;
+}
+/* 标题 h1 与副标题 subtitle 恢复继承全局 2.2rem 规范，保持全站完全一致 */
+.smart-import-banner {
+    flex: 0 0 auto !important;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 0.5rem;
+}
+.managed-container { 
+    flex: 1; 
+    min-height: 0;
+    display: flex; 
+    flex-direction: column; 
+    gap: 0.5rem; 
+}
+.entry-grid-wrapper {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    gap: 1.5rem;
+    align-items: stretch;
+}
+.entry-left, .entry-right {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+.entry-grid-wrapper .card { 
+    padding: 0.6rem 0.9rem; 
+    margin-bottom: 0; 
+    flex: 1; 
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
 #view-manage .section-title { margin-bottom: 0.35rem; font-size: 0.85rem; color: var(--primary-color); }
 
 #view-manage .table-container { 
