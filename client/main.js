@@ -383,21 +383,49 @@ async function loadDashboard() {
     charts.dashboardPie = new Chart(document.getElementById('dashboard-pie-chart'), {
         type: 'doughnut',
         data: {
-            labels: sortedData.map(d=>d.category),
+            labels: sortedData.map(d => d.category),
             datasets: [{ 
-                data: sortedData.map(d=>d.year1_total), 
+                data: sortedData.map(d => d.year1_total), 
                 backgroundColor: CHART_COLORS, 
                 borderWidth: 0, 
                 borderColor: '#1f1f31',
-                hoverOffset: 8
+                hoverOffset: 6
             }]
         },
         options: { 
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '70%',
+            cutout: '68%',
+            layout: {
+                padding: { top: 2, bottom: 2, left: 0, right: 6 }
+            },
             plugins: { 
-                legend: { position: 'right', labels: { boxWidth: 10, usePointStyle: true, padding: 15 } } 
+                legend: { 
+                    position: 'right',
+                    align: 'center',
+                    labels: { 
+                        boxWidth: 8, 
+                        boxHeight: 8,
+                        usePointStyle: true, 
+                        pointStyle: 'circle',
+                        padding: 6, /* 减小间距，确保9个分类在单列内垂直容纳，绝不换列挤出边界 */
+                        color: '#94a3b8',
+                        font: {
+                            size: 11,
+                            family: "'Inter', 'PingFang SC', sans-serif"
+                        }
+                    } 
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const val = context.raw || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                            return ` ${context.label}: ${val.toLocaleString()} 件 (${pct}%)`;
+                        }
+                    }
+                }
             } 
         }
     });
