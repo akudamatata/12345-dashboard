@@ -530,7 +530,7 @@ async function saveRecords() {
             })
         });
         if (res.ok) {
-            btn.innerHTML = '✅ 同步固化成功';
+            btn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" style="stroke: #000; vertical-align: -2px; margin-right: 4px;"><polyline points="20 6 9 17 4 12"></polyline></svg> 同步固化成功';
             setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000);
         }
     } catch(e) {
@@ -918,7 +918,7 @@ async function loadDepartmentAnalysis() {
         card.className = `stat-card glass-panel glow-${i === 0 ? 'cyan' : 'purple'}`;
         card.style.flex = "1";
         card.innerHTML = `
-            <div class="stat-icon">${i === 0 ? '📊' : '📈'}</div>
+            <div class="stat-icon">${i === 0 ? '<svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>' : '<svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>'}</div>
             <div class="stat-content">
                 <div class="label">${y}年度 · ${subjectName}</div>
                 <div class="value counter" id="analysis-val-${y}">0</div>
@@ -934,7 +934,7 @@ async function loadDepartmentAnalysis() {
         totalCard.className = "stat-card glass-panel glow-pink";
         totalCard.style.flex = "1";
         totalCard.innerHTML = `
-            <div class="stat-icon">🎯</div>
+            <div class="stat-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg></div>
             <div class="stat-content">
                 <div class="label">所选周期聚合总计</div>
                 <div class="value counter" id="analysis-total-val">0</div>
@@ -1493,7 +1493,7 @@ async function exportQueryToExcel(mode = 'breakdown') {
         URL.revokeObjectURL(url);
 
         if (btn) {
-            btn.innerHTML = '✅ 导出成功';
+            btn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" style="stroke: var(--success-color); vertical-align: -2px; margin-right: 4px;"><polyline points="20 6 9 17 4 12"></polyline></svg> 导出成功';
             setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 2000);
         }
     } catch (e) {
@@ -1694,7 +1694,7 @@ async function exportMonthlyReport() {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
 
-        btn.innerHTML = '✅ 导出成功';
+        btn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" style="stroke: #fff; vertical-align: -2px; margin-right: 4px;"><polyline points="20 6 9 17 4 12"></polyline></svg> 导出成功';
         setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 2000);
     } catch (e) {
         console.error('导出失败:', e);
@@ -1776,7 +1776,7 @@ async function handleSmartExcelParse(file) {
         return;
     }
 
-    uploadBtn.innerHTML = '<span>⚡</span> 正在极速解析...';
+    uploadBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" style="stroke: #000; animation: spin 1s linear infinite; vertical-align: -2px; margin-right: 4px;"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg> 正在极速解析...';
     uploadBtn.disabled = true;
     if (statusText) statusText.innerHTML = `<span style="color:#00f3ff;">正在读取并分析表格: <b>${file.name}</b> ...</span>`;
 
@@ -1936,14 +1936,15 @@ async function handleSmartExcelParse(file) {
 
         if (statusText) {
             statusText.innerHTML = `
-                <span style="color:#00e676; font-weight:600;">
-                    ✅ 智能填报成功！文件: <b>${file.name}</b> (有效纳管 <b>${validCount}</b> 件: 审批通过 ${passCount} 件, 审批中 ${pendingCount} 件)
+                <span style="color:#00e676; font-weight:600; display: inline-flex; align-items: center; gap: 4px;">
+                    <svg class="svg-icon" viewBox="0 0 24 24" style="stroke: #00e676;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    智能填报成功！文件: <b>${file.name}</b> (有效纳管 <b>${validCount}</b> 件: 审批通过 ${passCount} 件, 审批中 ${pendingCount} 件)
                 </span>
                 <span style="color:#a5f3fc; margin-left: 8px;">数据已全部精确回填，请核对后点击右下方【同步固化并封存数据】。</span>
             `;
         }
 
-        uploadBtn.innerHTML = '✅ 填报完成';
+        uploadBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" style="stroke: #000; vertical-align: -2px; margin-right: 4px;"><polyline points="20 6 9 17 4 12"></polyline></svg> 填报完成';
         setTimeout(() => {
             uploadBtn.innerHTML = originalBtnHtml;
             uploadBtn.disabled = false;
@@ -1952,7 +1953,7 @@ async function handleSmartExcelParse(file) {
     } catch (err) {
         console.error('智能解析表格失败:', err);
         alert('解析表格失败: ' + err.message);
-        if (statusText) statusText.innerHTML = `<span style="color:#ff3b3b;">❌ 解析表格失败: ${err.message}</span>`;
+        if (statusText) statusText.innerHTML = `<span style="color:#ff3b3b; display: inline-flex; align-items: center; gap: 4px;"><svg class="svg-icon" viewBox="0 0 24 24" style="stroke: #ff3b3b;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg> 解析表格失败: ${err.message}</span>`;
         uploadBtn.innerHTML = originalBtnHtml;
         uploadBtn.disabled = false;
     }
