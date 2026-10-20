@@ -99,13 +99,10 @@ def analyze_excel(file_source, cfg=None):
         hist_persons = str(row.get('历史审批人', '')).strip()
         details = str(row.get('案件详情', '')).strip()
         
-        # 部门判定：仅严格通过工单状态和人员字段识别
-        if status_category == '未办结':
+        # 部门判定：优先通过历史审批人识别承办大队责任人，若未匹配再通过当前负责人识别
+        matched_dept = match_department(hist_persons, person_dept_pairs)
+        if matched_dept == '其他/未匹配':
             matched_dept = match_department(cur_person, person_dept_pairs)
-        else:
-            matched_dept = match_department(hist_persons, person_dept_pairs)
-            if matched_dept == '其他/未匹配':
-                matched_dept = match_department(cur_person, person_dept_pairs)
                     
         # 关键字识别
         has_kw = keyword in details

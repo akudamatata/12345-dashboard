@@ -1,0 +1,26 @@
+-- 2026-10 Data Sync
+INSERT OR REPLACE INTO records (category_id, year, month, workload) VALUES (156, 2026, 10, 254);
+INSERT OR REPLACE INTO records (category_id, year, month, workload) VALUES (157, 2026, 10, 21);
+INSERT OR REPLACE INTO records (category_id, year, month, workload) VALUES (158, 2026, 10, 22);
+INSERT OR REPLACE INTO records (category_id, year, month, workload) VALUES (159, 2026, 10, 15);
+INSERT OR REPLACE INTO records (category_id, year, month, workload) VALUES (160, 2026, 10, 14);
+INSERT OR REPLACE INTO records (category_id, year, month, workload) VALUES (161, 2026, 10, 4);
+INSERT OR REPLACE INTO records (category_id, year, month, workload) VALUES (162, 2026, 10, 6);
+INSERT OR REPLACE INTO records (category_id, year, month, workload) VALUES (163, 2026, 10, 0);
+INSERT OR REPLACE INTO records (category_id, year, month, workload) VALUES (164, 2026, 10, 0);
+INSERT OR REPLACE INTO squad_records (squad_id, category_id, year, month, workload) VALUES (1, 156, 2026, 10, 70);
+INSERT OR REPLACE INTO squad_records (squad_id, category_id, year, month, workload) VALUES (1, 157, 2026, 10, 3);
+INSERT OR REPLACE INTO squad_records (squad_id, category_id, year, month, workload) VALUES (2, 156, 2026, 10, 18);
+INSERT OR REPLACE INTO squad_records (squad_id, category_id, year, month, workload) VALUES (2, 157, 2026, 10, 3);
+INSERT OR REPLACE INTO squad_records (squad_id, category_id, year, month, workload) VALUES (3, 156, 2026, 10, 68);
+INSERT OR REPLACE INTO squad_records (squad_id, category_id, year, month, workload) VALUES (3, 157, 2026, 10, 3);
+INSERT OR REPLACE INTO squad_records (squad_id, category_id, year, month, workload) VALUES (4, 156, 2026, 10, 45);
+INSERT OR REPLACE INTO squad_records (squad_id, category_id, year, month, workload) VALUES (4, 157, 2026, 10, 1);
+INSERT OR REPLACE INTO squad_records (squad_id, category_id, year, month, workload) VALUES (5, 156, 2026, 10, 13);
+INSERT OR REPLACE INTO squad_records (squad_id, category_id, year, month, workload) VALUES (5, 157, 2026, 10, 3);
+INSERT OR REPLACE INTO squad_records (squad_id, category_id, year, month, workload) VALUES (6, 156, 2026, 10, 13);
+INSERT OR REPLACE INTO squad_records (squad_id, category_id, year, month, workload) VALUES (6, 157, 2026, 10, 3);
+INSERT OR REPLACE INTO squad_records (squad_id, category_id, year, month, workload) VALUES (7, 156, 2026, 10, 17);
+INSERT OR REPLACE INTO squad_records (squad_id, category_id, year, month, workload) VALUES (7, 157, 2026, 10, 5);
+INSERT OR REPLACE INTO squad_records (squad_id, category_id, year, month, workload) VALUES (8, 156, 2026, 10, 10);
+INSERT OR REPLACE INTO squad_records (squad_id, category_id, year, month, workload) VALUES (8, 157, 2026, 10, 0);

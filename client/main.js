@@ -1877,14 +1877,21 @@ async function handleSmartExcelParse(file) {
             const histPersons = String(row.getCell(colIndex['历史审批人'])?.text || '').trim();
             const details = String(row.getCell(colIndex['案件详情'])?.text || '').trim();
 
-            // 责任人判定：严格通过工单状态与人员字段
-            const targetPersonStr = isPending ? curPerson : (histPersons || curPerson);
+            // 责任人判定：无论是审批通过还是审批中，审批中和审批通过合并统计
+            // 优先在历史审批人中查找承办大队责任人（审批中案件通常已转交局领导），若无再在当前负责人中查找
             let matchedDept = '其他/未匹配';
-
             for (const [p, d] of Object.entries(SMART_PERSON_MAP)) {
-                if (targetPersonStr.includes(p)) {
+                if (histPersons.includes(p)) {
                     matchedDept = d;
                     break;
+                }
+            }
+            if (matchedDept === '其他/未匹配') {
+                for (const [p, d] of Object.entries(SMART_PERSON_MAP)) {
+                    if (curPerson.includes(p)) {
+                        matchedDept = d;
+                        break;
+                    }
                 }
             }
 
